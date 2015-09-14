@@ -1,0 +1,389 @@
+---
+title: "Interpolating irregular data in R"
+author: "Michael Sumner"
+date: "15/8/2014"
+output: html_document
+---
+
+Here we explore some of the many ways to interpolate from scattered data, in R. 
+
+# Setup
+
+Define utility functions for repeated usage, and load required packages. 
+```{r}
+scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
+
+##colfun <- colorRampPalette(c("dodgerblue", "firebrick"))
+colfun <- topo.colors
+library(raster)
+library(rgdal)
+library(gstat)
+library(fields)
+library(akima)
+```
+
+Define input data and read it in. We also reproject the longitude latitude values to a local equal area projection (in metres). 
+
+```{r}
+dp <- "."
+f <- "data_from_SAZSENSE_TM_20120209.txt"
+fp <- file.path(dp, f)
+## read the data
+szt <- read.table(fp, comment.char = "/", sep = "\t", header = TRUE, check.names = FALSE)
+## negate "Depth"
+szt$Depth <- -szt$Depth
+## define projected values for lonlat
+cproj <- "+proj=laea +datum=WGS84 +lon_0=147 +lat_0=-49 +units=km +x_0=600 +y_0=1200000"
+szt[,c("px", "py")] <- project(as.matrix(szt[, c("Longitude [degrees_east]", "Latitude [degrees_north]")]), cproj)
+```
+
+We will take extracts from "szt" as "d", we can use this script template later to explore other variables. 
+
+
+```{r}
+xname <- "py"
+yname <- "Depth"
+varname <- "Al"
+asub <- !is.na(szt[[varname]])
+
+d <- szt[asub, c(xname, yname, varname)]
+```
+
+# Simplistic rasterization
+
+The most simple thing possible is to define a grid and simply populate that with values from points. Extend the grid by a small amount. 
+
+```{r}
+ex <- extent(range(d[, xname]), range(d[, yname])) * 1.2
+rbase <- raster(ex, ncols = 25, nrows = 25)
+rlast <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname])
+```
+
+We can change around the underlying grid to see the effects of pixel size, but more important is that with sufficiently large cells we have more than one value for each, and so we need a decision to choose which value to use. The default is 'last', change that to 'mean' to see the difference. 
+
+```{r}
+rmean <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname], fun = mean)
+rval <- pretty(d[,varname], n = 15)
+
+plot(rlast, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+points(d[, c(xname, yname)], cex = 0.2)
+ plot(rmean, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+points(d[, c(xname, yname)], cex = 0.2)
+
+```
+
+Use thin plate spline. 
+
+```{r}
+p <- Tps(d[, c(xname, yname)], d[,varname])
+rp <- interpolate(rbase, p)
+rpse <- interpolate(rbase, p, fun = predictSE)
+ plot(rp, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+points(d[, c(xname, yname)], cex = 0.2)
+ plot(rpse, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+points(d[, c(xname, yname)], cex = 0.2)
+
+```
+
+What about Delaunay? 
+```{r}
+## input must be ppp
+library(spatstat)
+library(maptools)
+rasterToOwin <- function(x) {
+  owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
+}
+pObj <- ppp(d[,xname], d[,yname], window = rasterToOwin(rbase), marks = d[, varname])
+
+lltes<-delaunay(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+       }
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
+
+```
+What about Dirichlet? 
+
+```{r}
+lltes<-dirichlet(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+       }
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
+
+```
+
+Grid interpolation from Dirichlet or Delaunay. 
+
+```{r}
+source("maybetin.R")
+
+fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
+plot(rasterFromXYZ(as.data.frame(fcs.dir)))
+fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
+plot(rasterFromXYZ(as.data.frame(fcs.del)))
+```
+
+IDW
+
+```{r}
+library(gstat)
+
+dsp <- d
+coordinates(dsp) <- c(xname, yname)
+## inverse distance weighted (IDW)
+mg <- gstat(id = "Al", formula = Al~1, locations = c(xname, yname), data=dsp, 
+            nmax=7, set=list(idp = .5))
+z <- interpolate(rbase, mg)
+plot(z)
+```
+
+Kriging. 
+
+```{r}
+## with log
+v <- variogram(log(Al)~1, dsp)
+m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
+gOK <- gstat(NULL, "logAl", log(Al)~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+
+## without log
+v <- variogram(Al~1, dsp)
+m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
+gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+
+
+## Gaussian
+v <- variogram(Al~1, dsp)
+m <- fit.variogram(v, vgm(1, "Gau", 300, 1))
+gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+```
+
+fields?
+
+```{r}
+out <- as.image(d[,varname], x = d[,c(xname, yname)], nx = 25, ny = 25)
+plot(raster(out))
+look<- image.smooth( out, theta= 2.5) 
+plot(raster(look))
+
+```
+
+Try Akima. 
+
+```{r}
+library(akima)
+
+x0 <- xFromCol(rbase)
+y0 <- yFromRow(rbase)
+
+aklin <- interp(d[,xname], d[,yname], d[,varname], 
+              x0, y0)
+# aksplin <-interp(d[,xname], d[,yname], d[,varname], 
+#               x0, y0, linear = FALSE, extrap = TRUE) 
+rlin <- raster(list(x = aklin$x, y = rev(aklin$y), z = t(aklin$z[,ncol(aklin$z):1])))
+##rsplin <- raster(aksplin)
+plot(rlin, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+points(d[, c(xname, yname)], cex = 0.2)
+# image(aksplin$x, rev(aksplin$y), aksplin$z, col = colfun(length(rval) - 1), breaks = rval, asp = .2)
+# points(d[, c(xname, yname)], cex = 0.2)
+# 
+# g <- expand.grid(x0, y0)
+# ak <- interpp(xyz[,1], xyz[,2], xyz[,3], 
+#               g[,1], g[,2])
+# 
+# 
+# 
+# xy <- szt[asub, c("py", "Depth")]
+# 
+# plot(xy, col = colfun(16)[scl(szt$Al[asub]) * 15 + 1])
+# 
+# 
+# rtemplate <- raster(extent(as.matrix(xy)), nrow = 50, ncol = 150)
+# 
+# r <- rasterize(xy, rtemplate, field = szt$Al[asub])
+# 
+# 
+# md <- szt[asub, ]
+# 
+# coordinates(md) <- c("Depth", "py")
+# 
+# 
+# 
+# 
+# ## try
+# idw, kriging, Tps
+# spatstat smooth
+# akima interpp
+# 
+# 
+# 
+# 
+# ## inverse distance weighted (IDW)
+# ##r <- raster(system.file("external/test.grd", package="raster"))
+# ##data(meuse)
+# mg <- gstat(id = "Al", formula = Al~1,  data=md, 
+#             nmax=7, set=list(idp = .5))
+# z <- interpolate(rtemplate, mg)
+# z <- mask(z, r)
+# 
+# 
+# 
+#   
+#   ##SpatialPointsDataFrame(SpatialPoints(as.matrix(xy)), szt[asub,"Al", drop = FALSE])
+# 
+# v <- variogram(Al~1, md)
+# m <- fit.variogram(v, vgm(1, "Sph", 30, 1))
+# m <- fit.variogram(v, vgm(10, "Nug", 0))
+# gOK <- gstat(NULL, "Al", Al~1, md, model=m)
+# ri <- interpolate(rtemplate, gOK)
+# plot(ri)
+# 
+# ##m <- gstat(id = "Al", formula = Al~1, locations = ~x+y, data = xy)
+# interpolate()
+```
+
+
+Hexagons? (See hexbin, spatstat). 
+
+## Along-track distance
+Previously we used Latitude as our x-axis, this is not very sensible since the track visits the same latitudes at different longitudes. As a simple improvement let's build an along-track axis. 
+
+```{r}
+lonname <- "Longitude [degrees_east]"
+latname <- "Latitude [degrees_north]"
+tname <- "yyyy-mm-ddThh:mm:ss.sss"
+d2 <- szt[asub, c(xname, yname, lonname, latname, varname, tname)]
+d2$date <- as.POSIXct(d2[[tname]])
+d2 <- d2[order(d2$date, d2$Depth), ]
+library(geosphere)
+dists <- numeric(nrow(d2)-1)
+for (i in seq_along(dists)) {
+  dists[i] <- spDistsN1(as.matrix(d2[i, c(lonname, latname)]), as.matrix(d2[i+1, c(lonname, latname), drop = FALSE]), longlat = TRUE)
+  }
+d2$dist <- cumsum(c(0, dists))
+```
+
+
+So now. 
+
+```{r}
+xname <- "dist"
+d <- d2
+ex <- extent(range(d[, xname]), range(d[, yname])) * 1.2
+rbase <- raster(ex, ncols = 25, nrows = 25)
+rlast <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname])
+
+rmean <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname], fun = mean)
+
+rval <- pretty(d[,varname], n = 15)
+
+plot(rlast, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
+points(d[, c(xname, yname)], cex = 0.2)
+ plot(rmean, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
+points(d[, c(xname, yname)], cex = 0.2)
+
+
+p <- Tps(d[, c(xname, yname)], d[,varname])
+rp <- interpolate(rbase, p)
+rpse <- interpolate(rbase, p, fun = predictSE)
+ plot(rp, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
+points(d[, c(xname, yname)], cex = 0.2)
+ plot(rpse, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
+points(d[, c(xname, yname)], cex = 0.2)
+
+
+## input must be ppp
+library(spatstat)
+library(maptools)
+rasterToOwin <- function(x) {
+  owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
+}
+pObj <- ppp(d[,xname], d[,yname], window = rasterToOwin(rbase), marks = d[, varname])
+
+lltes<-delaunay(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+       }
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
+
+
+lltes<-dirichlet(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+       }
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
+
+
+source("maybetin.R")
+
+fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
+plot(rasterFromXYZ(as.data.frame(fcs.dir)))
+fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
+plot(rasterFromXYZ(as.data.frame(fcs.del)))
+
+library(gstat)
+
+dsp <- d
+coordinates(dsp) <- c(xname, yname)
+## inverse distance weighted (IDW)
+mg <- gstat(id = "Al", formula = Al~1, locations = c(xname, yname), data=dsp, 
+            nmax=7, set=list(idp = .5))
+z <- interpolate(rbase, mg)
+plot(z)
+
+## with log
+v <- variogram(log(Al)~1, dsp)
+m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
+gOK <- gstat(NULL, "logAl", log(Al)~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+
+## without log
+v <- variogram(Al~1, dsp)
+m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
+gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+
+
+## Gaussian
+v <- variogram(Al~1, dsp)
+m <- fit.variogram(v, vgm(1, "Gau", 300, 1))
+gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
+OK <- interpolate(rbase, gOK)
+plot(OK)
+
+out <- as.image(d[,varname], x = d[,c(xname, yname)], nx = 25, ny = 25)
+plot(raster(out))
+look<- image.smooth( out, theta= 2.5) 
+plot(raster(look))
+
+
+library(akima)
+
+x0 <- xFromCol(rbase)
+y0 <- yFromRow(rbase)
+
+aklin <- interp(d[,xname], d[,yname], d[,varname], 
+              x0, y0)
+# aksplin <-interp(d[,xname], d[,yname], d[,varname], 
+#               x0, y0, linear = FALSE, extrap = TRUE) 
+rlin <- raster(list(x = aklin$x, y = rev(aklin$y), z = t(aklin$z[,ncol(aklin$z):1])))
+##rsplin <- raster(aksplin)
+plot(rlin, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
+points(d[, c(xname, yname)], cex = 0.2)
+```

@@ -1,0 +1,145 @@
+---
+title: "Mapping cruise data from BROKE-West, with R"
+author: "Michael Sumner, Kerrie Swadling and Tomas Remenyi"
+date: "8/27/2015"
+output: html_document
+---
+
+```{r,echo=FALSE,message=FALSE}
+library(fields)
+```
+
+Get some bathymetric data and save it (see Appendix). 
+
+Load the bathymetry data. 
+```{r}
+load("data/broke_bathy.RData")
+```
+
+Read the zooplankton data. 
+
+```{r}
+library(readxl)
+bw <- read_excel("data/BW-Zooplankton_env.xls")
+summary(bw[,1:10])
+
+```
+
+Plot the temperature data. 
+
+```{r}
+plot(bw$temp)
+```
+
+Create a grid to interpolate onto. 
+
+```{r}
+library(raster)
+xy <- as.matrix(bw[, c("Lon", "Lat")])
+r0 <-  raster(extent(xy), ncol = 60, nrow = 50, crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+library(fields)
+tps <- Tps(xy, bw$temp, lon.lat = TRUE, method = "REML")
+temp <- interpolate(r0, tps)
+temp[temp < -1.8] <- NA_real_
+
+
+
+tps <- Tps(xy, bw$`ice free days`, lon.lat = TRUE, method = "REML")
+ifd <- interpolate(r0, tps)
+
+tps <- Tps(xy, bw$`chl a mg/m2)`/1000, lon.lat = TRUE, method = "REML")
+chl <- interpolate(r0, tps)
+
+library(palr)
+spal <- palr::sstPal(palette = TRUE)
+plot(NA, asp = NA, xlab = "Longitude", ylab = "Latitude", xlim = c(20, 90), ylim = c(-70, -60))
+plot(temp, add = TRUE, col = spal$cols, breaks = spal$breaks, legend = FALSE)
+contour(temp, add = TRUE)
+contour(bathy,  lwd = 2, lev = -1, add = TRUE); ##c(-5000, -4000, -3000, -500, -200))
+points(xy, pch = 21, cex = 2, bg = sstPal(bw$temp))
+
+# use model to predict values at all locations
+plot(NA, asp = NA, xlab = "Longitude", ylab = "Latitude", xlim = c(20, 90), ylim = c(-70, -60))
+plot(ifd, add = TRUE)
+contour(ifd, add = TRUE)
+contour(bathy,  lwd = 2, lev = -1, add = TRUE); ##c(-5000, -4000, -3000, -500, -200))
+
+# use model to predict values at all locations
+plot(NA, asp = NA, xlab = "Longitude", ylab = "Latitude", xlim = c(20, 90), ylim = c(-70, -60))
+pal <- palr::chlPal(palette = TRUE)
+plot(chl, add = TRUE, col = pal$cols, breaks = pal$breaks, legend = FALSE)
+contour(chl, add = TRUE)
+contour(bathy,  lwd = 2, lev = -1, add = TRUE); ##c(-5000, -4000, -3000, -500, -200))
+points(xy, pch = 21, cex = 2, bg = chlPal(bw$`chl a mg/m2)`/1000))
+
+
+```
+
+Using triangulation etc. 
+
+```{r}
+
+library(gstat)
+bwd <- as.data.frame(bw)
+bwd$x <- bwd$Lon
+bwd$y <- bwd$Lat
+mg <- gstat(id = "temp", formula = temp~1, locations = ~x+y, data=bwd, nmax = 30, set=list(idp = .35))
+
+z <- interpolate(r0, mg)
+plot(z)
+
+
+
+
+library(rgdal)
+library(RTriangle)
+prj <- "+proj=laea +lon_0=54 +lat_0=-63"
+pxy <- project(xy, prj)
+tri <- RTriangle::triangulate(pslg(P = xy))
+#rxy <- project(coordinates(r0), prj)
+rxy <- coordinates(r0)
+ tri_pip <- function(tri, pts) {
+   ps <- lapply(split(tri$T, seq(nrow(tri$T))), function(x) Polygon(tri$P[c(x, x[1]), ]))
+   sp <- lapply(seq_along(ps), function(x) Polygons(ps[x], x))
+   spp <- SpatialPolygons(sp, proj4string = CRS(proj4string(pts)))
+   
+   over(pts, spp)
+ }
+scl <- function(x) (x - min(x))/diff(range(x))
+ pid <- tri_pip(tri, SpatialPoints(rxy, proj4string = CRS(prj)))
+ ok <- !is.na(pid)
+ weighted <- numeric(length(pid))
+ library(geometry)
+for (i in which(ok)) {
+  #print(i)
+  tripts <- tri$P[tri$T[pid[i], ], ]
+  rpts <- rxy[pid == pid[i] & !is.na(pid) , ]
+  wgts <- cart2bary(tripts, rpts)
+  vals <- matrix(bw$temp[tri$T[pid[i], ]], ncol = 3, nrow = nrow(wgts), byrow = TRUE)
+  weighted[pid == pid[i] & !is.na(pid)] <- rowSums(vals * wgts)
+}
+  plot(setValues(r0, weighted), asp = NA)
+ 
+  ```
+# Appendix
+
+
+ 
+```{r,eval=FALSE}
+library(raadtools)
+bathy1 <- aggregate(readtopo("etopo2", xylim = extent(15, 95, -75, -55)) , fact = 2, fun = mean)
+gf <- focalWeight(bathy1, res(bathy1) * 6, "Gauss")
+bathy <- focal(bathy1, gf)
+save(bathy, file = "data/broke_bathy.RData")
+
+```
+```{r,eval=FALSE,echo=FALSE}
+library(rmatio)
+bathy0 <- read.mat("afternoon_exercise/broke_bathy.mat")
+xynames <- c("lon", "lat")
+len <- length(bathy0)
+## you cannot change the xlim/ylim in R after the fact
+lon <- unlist(bathy0[seq(1, len, by = 2)])
+lat <- unlist(bathy0[seq(2, len, by = 2)])
+
+```
