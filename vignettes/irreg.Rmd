@@ -5,7 +5,7 @@ date: "15/8/2014"
 output: html_document
 ---
 
-Here we explore some of the many ways to interpolate from scattered data, in R. 
+
 
 # Setup
 
@@ -386,4 +386,53 @@ rlin <- raster(list(x = aklin$x, y = rev(aklin$y), z = t(aklin$z[,ncol(aklin$z):
 ##rsplin <- raster(aksplin)
 plot(rlin, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
 points(d[, c(xname, yname)], cex = 0.2)
+```
+
+
+Better version of triangulation. 
+
+```{r}
+library(geometry)
+library(sp)
+
+## raw data
+data(volcano)
+vx <- seq(0, 1, length = nrow(volcano))
+vy <- seq(0, 1, length = ncol(volcano))
+
+## reconstruct volcano by bilinear interpolation within triangles
+set.seed(10)
+## scattered points from volcano domain
+xy <- matrix(runif(548), ncol = 2)
+xi <- findInterval(xy[,1], vx)
+yi <- findInterval(xy[,2], vy)
+v <- volcano[cbind(xi, yi)]
+
+## as a raster
+ras <- raster(list(x = vx, y = vy, z = volcano))
+
+## triangulation (see also RTriangle, rgeos, spatstat, geometry, ...)
+tri <- delaunayn(xy)
+rxy <- coordinates(ras)
+
+## triangle id for every point
+pid <- tri_pip(list(T = tri, P = xy), SpatialPoints(rxy))
+ok <- !is.na(pid)
+
+## estimated value from interpolation
+est <- rep(NA_real_, nrow(rxy))
+for (i in which(ok)) {
+  ## triangle points
+  tripts <- xy[tri[pid[i], ], ]
+  ## grid points inside the triangle
+  rpts <- rxy[pid == pid[i] & !is.na(pid) , , drop = FALSE]
+  wgts <- cart2bary(tripts, rpts)
+  vals <- matrix(v[tri[pid[i], ]], ncol = 3, nrow = nrow(wgts), byrow = TRUE)
+  est[pid == pid[i] & !is.na(pid)] <- rowSums(vals * wgts)
+}
+
+par(mfrow = c(2, 1))
+plot(ras); contour(ras, add = TRUE)
+plot(setValues(ras, est))
+contour(setValues(ras, est), add = TRUE)
 ```

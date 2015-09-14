@@ -5,11 +5,18 @@ date: "8/27/2015"
 output: html_document
 ---
 
+Here we explore some of the many ways to interpolate from scattered data, in R. 
+
+To simplify the examples we create a function for each specific type of interpolation used, and each function has inputs "xy", "value" and (optionally) "grid". 
+
+
+The example data we use is transect-based voyage data from the Aurora Australis. 
+
 ```{r,echo=FALSE,message=FALSE}
 library(fields)
 ```
 
-Get some bathymetric data and save it (see Appendix). 
+Get some bathymetric data and save it (see Appendix), we will use this to complete our map. 
 
 Load the bathymetry data. 
 ```{r}
@@ -22,33 +29,42 @@ Read the zooplankton data.
 library(readxl)
 bw <- read_excel("data/BW-Zooplankton_env.xls")
 summary(bw[,1:10])
-
+lonlat <- as.matrix(bw[, c("Lon", "Lat")])
+val <- bw$temp
+minmax <- c(-1.8, 40)
 ```
 
 Plot the temperature data. 
 
 ```{r}
-plot(bw$temp)
+plot(val)
 ```
 
-Create a grid to interpolate onto. 
+Create a grid to interpolate onto, this can be used repeatedly for many methods. 
 
 ```{r}
 library(raster)
-xy <- as.matrix(bw[, c("Lon", "Lat")])
-r0 <-  raster(extent(xy), ncol = 60, nrow = 50, crs = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+defaultgrid <- function(xy, ncol = 60, nrow = 50, prj = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0") {
+  raster(extent(xy), ncol = 60, nrow = 50, crs = prj)
+}
+r0 <- defaultgrid(lonlat)
+
+```
+
+Thin plate spline interpolation. 
+
+```{r}
 library(fields)
-tps <- Tps(xy, bw$temp, lon.lat = TRUE, method = "REML")
-temp <- interpolate(r0, tps)
-temp[temp < -1.8] <- NA_real_
+tpsfun <- function(xy, value, grid = NULL) {
+  if (is.null(grid)) grid <- defaultgrid(xy)
+  model <- Tps(xy, value, lon.lat = isLonLat(grid), method = "REML")
+  interpolate(grid, model)
+}
+tpsgrid  <- tpsfun(lonlat, val)
+tpsgrid <- clamp(tpsgrid, minmax[1], minmax[2])
 
+```
 
-
-tps <- Tps(xy, bw$`ice free days`, lon.lat = TRUE, method = "REML")
-ifd <- interpolate(r0, tps)
-
-tps <- Tps(xy, bw$`chl a mg/m2)`/1000, lon.lat = TRUE, method = "REML")
-chl <- interpolate(r0, tps)
 
 library(palr)
 spal <- palr::sstPal(palette = TRUE)
