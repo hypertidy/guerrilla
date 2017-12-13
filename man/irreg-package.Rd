@@ -6,7 +6,8 @@
 \alias{irreg-package}
 \title{irreg: Illustrate Various Methods of Interpolation for Irregular Data}
 \description{
-Do stuff with data.
+Examples of interpolating irregular data, to illustrate the mechanics
+of various methods.
 }
 \seealso{
 Useful links:

@@ -3,7 +3,8 @@ Version: 0.0.0.9000
 Title: Illustrate Various Methods of Interpolation for Irregular Data
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre")), 
              person("Tomas", "Remenyi", role = "ctb"))
-Description: Do stuff with data. 
+Description: Examples of interpolating irregular data, to illustrate the mechanics
+  of various methods. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -19,6 +20,7 @@ Suggests:
     maptools,
     geometry,
     viridis,
-    rmarkdown
+    rmarkdown, 
+    fields, gstat, palr, readxl, rgdal
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
