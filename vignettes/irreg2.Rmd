@@ -1,18 +1,28 @@
+
 ---
-title: "Interpolating irregular data in R"
-author: "Michael Sumner"
-date: "15/8/2014"
-output: html_document
+title: "Interpolating irregular data"
+author: "Michael D. Sumner"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Irregular data interpolation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
 
 # Setup
 
 Define utility functions for repeated usage, and load required packages. 
 ```{r}
 scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
-
+library(irreg)
 library(raster)
 library(rgdal)
 library(gstat)
@@ -25,7 +35,7 @@ Read the zooplankton data.
 
 ```{r}
 library(readxl)
-bw <- read_excel("~/home/Git/irreg/data/BW-Zooplankton_env.xls")
+bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "irreg"))
 summary(bw[,1:10])
 lonlat <- as.matrix(bw[, c("Lon", "Lat")])
 val <- bw$temp
@@ -48,9 +58,7 @@ Create a grid to interpolate onto, this can be used repeatedly for many methods.
 
 ```{r}
 library(raster)
-defaultgrid <- function(xy, ncol = 60, nrow = 50, prj = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0") {
-  raster(extent(xy), ncol = 60, nrow = 50, crs = prj)
-}
+
 r0 <- defaultgrid(lonlat)
 
 ```
@@ -95,71 +103,60 @@ plot(tpsgrid)
 
 
 
-Bilinear triangulation. This is identical to Matlab's griddata(, method = "bilinear")
+# Bilinear triangulation. 
+
+This is identical to Matlab's griddata(, method = "bilinear")
 
 ```{r}
 library(geometry)
 library(sp)
-source("~/home/Git/irreg/R/bilinear_triangulation.R")
-trifun <- function(xy, value, grid = NULL, ...) {
-   if (is.null(grid)) grid <- defaultgrid(xy)
-  tri <- geometry::delaunayn(xy); 
-  #tri <- rgl::triangulate(xy)
-  #tri <- deldir::deldir(xy)
- #tri <- RTriangle::triangulate(pslg(P = xy))
-  rxy <- coordinates(grid)
+library(irreg)
+#source("~/home/Git/irreg/R/bilinear_triangulation.R")
 
-  ## triangle id for every point
-  pid <- tri_pip(list(T = tri, P = xy), SpatialPoints(rxy))
-  ok <- !is.na(pid)
 
-  ## estimated value from interpolation
-  est <- rep(NA_real_, nrow(rxy))
-  for (i in which(ok)) {
-    ## triangle points
-    tripts <- xy[tri[pid[i], ], ]
-    ## grid points inside the triangle
-    rpts <- rxy[pid == pid[i] & !is.na(pid) , , drop = FALSE]
-    wgts <- cart2bary(tripts, rpts)
-    vals <- matrix(value[tri[pid[i], ]], ncol = 3, nrow = nrow(wgts), byrow = TRUE)
-    est[pid == pid[i] & !is.na(pid)] <- rowSums(vals * wgts)
-  }
-  setValues(grid, est)
-}
-
-trigrid <- trifun(lonlat, val, r0)
+trigrid <- tri_fun(lonlat, val, r0)
 
 plot(trigrid)
 ```
+
+
+# Delaunay and Diriclet
 
 
 What about Delaunay and Dirichlet without interpolation? 
 
 
 ```{r}
-# ## input must be ppp
-# library(spatstat)
-# library(maptools)
-# rasterToOwin <- function(x) {
-#   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
-# }
-# pObj <- ppp(d[,xname], d[,yname], window = rasterToOwin(rbase), marks = d[, varname])
-# 
-# lltes<-delaunay(pObj)
-# meanval <- numeric(length(lltes[[3]]))
-#   for (i in seq_along(meanval)) {
-#   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-#        }
-# plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
-# points(d[,c(xname, yname)])
-# 
-# lltes<-dirichlet(pObj)
-# meanval <- numeric(length(lltes[[3]]))
-#   for (i in seq_along(meanval)) {
-#   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-#        }
-# plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
-# points(d[,c(xname, yname)])
+## input must be ppp
+library(spatstat)
+library(maptools)
+rasterToOwin <- function(x) {
+  owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
+}
+colfun <- viridis::viridis
+rbase <- r0
+d <- bw
+xname <- "Lon"
+yname <- "Lat"
+varname <- "temp"
+pObj <- ppp(d[[xname]], d[[yname]], window = rasterToOwin(rbase), marks = d[[varname]])
+
+lltes<-delaunay(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+       }
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
+
+lltes<-dirichlet(pObj)
+meanval <- numeric(length(lltes[[3]]))
+  for (i in seq_along(meanval)) {
+  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
+  }
+
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+points(d[,c(xname, yname)])
 
 ```
 
@@ -170,15 +167,14 @@ What about Delaunay and Dirichlet without interpolation?
 Grid interpolation from Dirichlet or Delaunay. This is much slower than the triangulate and cart2bary method above (**Mike needs to illustrate this**) 
 
 ```{r}
-# source("maybetin.R")
-# 
-# fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
-# plot(rasterFromXYZ(as.data.frame(fcs.dir)))
-# fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
-# plot(rasterFromXYZ(as.data.frame(fcs.del)))
+ 
+ fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
+ plot(rasterFromXYZ(as.data.frame(fcs.dir)))
+ fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
+ plot(rasterFromXYZ(as.data.frame(fcs.del)))
 ```
 
-IDW
+# IDW
 
 ```{r}
 library(gstat)
@@ -200,7 +196,7 @@ plot(dw);contour(trigrid, add = TRUE)
 
 ```
 
-Kriging. 
+# Kriging
 
 ```{r}
 
@@ -220,7 +216,7 @@ plot(krigrid)
 
 ```
 
-fields?
+# fields
 
 ```{r}
 # out <- as.image(d[,varname], x = d[,c(xname, yname)], nx = 25, ny = 25)
@@ -240,7 +236,7 @@ plot(fsmgrid)
 
 ```
 
-Try Akima. 
+# Akima
 
 ```{r}
 library(akima)
@@ -259,7 +255,9 @@ plot(akigrid)
 ```
 
 
-Hexagons? (See hexbin, spatstat). 
+# Hexagons? 
+
+(See hexbin, spatstat). 
 
 ## Along-track distance
 Previously we used Latitude as our x-axis, this is not very sensible since the track visits the same latitudes at different longitudes. As a simple improvement let's build an along-track axis. 
