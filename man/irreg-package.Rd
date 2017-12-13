@@ -22,7 +22,7 @@ Useful links:
 
 Other contributors:
 \itemize{
-  \item Marcelino de la Cruz [contributor]
+  \item Marcelino de la Cruz (wrote maybetin example function on R-Sig-Geo) [contributor]
   \item Tomas Remenyi [contributor]
 }
 
