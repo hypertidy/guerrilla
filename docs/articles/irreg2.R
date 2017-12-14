@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 
 ## ------------------------------------------------------------------------
 scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
-library(irreg)
+library(guerrilla)
 library(raster)
 library(rgdal)
 library(gstat)
@@ -16,7 +16,7 @@ library(palr)
 
 ## ------------------------------------------------------------------------
 library(readxl)
-bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "irreg"))
+bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "guerrilla"))
 summary(bw[,1:10])
 lonlat <- as.matrix(bw[, c("Lon", "Lat")])
 val <- bw$temp
@@ -64,8 +64,7 @@ plot(tpsgrid)
 ## ------------------------------------------------------------------------
 library(geometry)
 library(sp)
-library(irreg)
-#source("~/home/Git/irreg/R/bilinear_triangulation.R")
+library(guerrilla)
 
 
 trigrid <- tri_fun(lonlat, val, r0)

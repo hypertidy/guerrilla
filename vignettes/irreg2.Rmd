@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 Define utility functions for repeated usage, and load required packages. 
 ```{r}
 scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
-library(irreg)
+library(guerrilla)
 library(raster)
 library(rgdal)
 library(gstat)
@@ -110,8 +110,7 @@ This is identical to Matlab's griddata(, method = "bilinear")
 ```{r}
 library(geometry)
 library(sp)
-library(irreg)
-#source("~/home/Git/irreg/R/bilinear_triangulation.R")
+library(guerrilla)
 
 
 trigrid <- tri_fun(lonlat, val, r0)

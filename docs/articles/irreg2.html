@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interpolating irregular data • irreg</title>
+<title>Interpolating irregular data • guerrilla</title>
 <!-- jquery --><script src="https://code.jquery.com/jquery-3.1.0.min.js" integrity="sha384-nrOSfDHtoPMzJHjVTdCopGqIqeYETSXhZDFyniQ8ZHcVy08QesyHcnOUpMpqnmWq" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><!-- Font Awesome icons --><link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
 <!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
@@ -24,7 +24,7 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="../index.html">irreg</a>
+      <a class="navbar-brand" href="../index.html">guerrilla</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -52,7 +52,7 @@
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
-  <a href="https://github.com/mdsumner/irreg">
+  <a href="https://github.com/mdsumner/guerrilla">
     <span class="fa fa-github fa-lg"></span>
      
   </a>
@@ -83,7 +83,7 @@
 <a href="#setup" class="anchor"></a>Setup</h1>
 <p>Define utility functions for repeated usage, and load required packages.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">scl &lt;-<span class="st"> </span><span class="cf">function</span>(x) (x <span class="op">-</span><span class="st"> </span><span class="kw">min</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))<span class="op">/</span><span class="kw">diff</span>(<span class="kw">range</span>(x, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>))
-<span class="kw">library</span>(irreg)
+<span class="kw">library</span>(guerrilla)
 <span class="kw">library</span>(raster)
 <span class="co">#&gt; Loading required package: sp</span>
 <span class="kw">library</span>(rgdal)
@@ -198,8 +198,7 @@ tpsSEgrid &lt;-<span class="st"> </span><span class="kw">tpsfun</span>(lonlat, v
 <span class="co">#&gt; </span>
 <span class="co">#&gt;     shift</span>
 <span class="kw">library</span>(sp)
-<span class="kw">library</span>(irreg)
-<span class="co">#source("~/home/Git/irreg/R/bilinear_triangulation.R")</span>
+<span class="kw">library</span>(guerrilla)
 
 
 trigrid &lt;-<span class="st"> </span><span class="kw"><a href="../reference/tri_fun.html">tri_fun</a></span>(lonlat, val, r0)
