@@ -8,5 +8,5 @@
 #' @return raster
 #' @export
 defaultgrid <- function(xy, ncols = 60, nrows = 50, prj = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0") {
-  raster::raster(raster::extent(xy), ncols = ncols, nrows = ncols, crs = prj)
+  raster::raster(raster::extent(xy), ncols = ncols, nrows = nrows, crs = prj)
 }
