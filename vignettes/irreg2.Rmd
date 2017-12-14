@@ -183,13 +183,13 @@ idwfun <- function(xy, value, grid = NULL, ...) {
   coordinates(d) <- ~lon+lat
   proj4string(d) <- proj4string(grid)
   ## inverse distance weighted (IDW)
-  mg <- gstat(id = "value", formula = value~1, locations = c("lon", "lat"), data=d, ...) 
+  mg <- gstat(id = "value", formula = value~1, locations = c("lon", "lat"), data = d, ...) 
   interpolate(grid, mg)          
 }
 
 
 dw <- idwfun(lonlat, val, r0)
-dw <- idwfun(lonlat, val, r0, set=list(idp = 1.5))
+dw <- idwfun(lonlat, val, r0, set = list(idp = 1.5))
 plot(dw);contour(trigrid, add = TRUE)
 
 

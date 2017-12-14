@@ -312,14 +312,14 @@ idwfun &lt;-<span class="st"> </span><span class="cf">function</span>(xy, value,
   <span class="kw"><a href="http://www.rdocumentation.org/packages/sp/topics/coordinates">coordinates</a></span>(d) &lt;-<span class="st"> </span><span class="er">~</span>lon<span class="op">+</span>lat
   <span class="kw"><a href="http://www.rdocumentation.org/packages/sp/topics/is.projected">proj4string</a></span>(d) &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/sp/topics/is.projected">proj4string</a></span>(grid)
   ## inverse distance weighted (IDW)
-  mg &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/gstat/topics/gstat">gstat</a></span>(<span class="dt">id =</span> <span class="st">"value"</span>, <span class="dt">formula =</span> value<span class="op">~</span><span class="dv">1</span>, <span class="dt">locations =</span> <span class="kw">c</span>(<span class="st">"lon"</span>, <span class="st">"lat"</span>), <span class="dt">data=</span>d, ...) 
+  mg &lt;-<span class="st"> </span><span class="kw"><a href="http://www.rdocumentation.org/packages/gstat/topics/gstat">gstat</a></span>(<span class="dt">id =</span> <span class="st">"value"</span>, <span class="dt">formula =</span> value<span class="op">~</span><span class="dv">1</span>, <span class="dt">locations =</span> <span class="kw">c</span>(<span class="st">"lon"</span>, <span class="st">"lat"</span>), <span class="dt">data =</span> d, ...) 
   <span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/interpolate">interpolate</a></span>(grid, mg)          
 }
 
 
 dw &lt;-<span class="st"> </span><span class="kw">idwfun</span>(lonlat, val, r0)
 <span class="co">#&gt; [inverse distance weighted interpolation]</span>
-dw &lt;-<span class="st"> </span><span class="kw">idwfun</span>(lonlat, val, r0, <span class="dt">set=</span><span class="kw">list</span>(<span class="dt">idp =</span> <span class="fl">1.5</span>))
+dw &lt;-<span class="st"> </span><span class="kw">idwfun</span>(lonlat, val, r0, <span class="dt">set =</span> <span class="kw">list</span>(<span class="dt">idp =</span> <span class="fl">1.5</span>))
 <span class="co">#&gt; [inverse distance weighted interpolation]</span>
 <span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/plot">plot</a></span>(dw);<span class="kw"><a href="http://www.rdocumentation.org/packages/raster/topics/contour">contour</a></span>(trigrid, <span class="dt">add =</span> <span class="ot">TRUE</span>)</code></pre></div>
 <p><img src="irreg2_files/figure-html/unnamed-chunk-10-1.png" width="672"></p>
