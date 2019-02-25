@@ -24,8 +24,10 @@ everything **spatial** is *geo-spatial*.
 
 ## TODO
 
-Raise issues here if you want something or have
-questions\!
+Raise issues here if you want something or have questions\!
+
+I’m currently figuring out how I want this to work, but I think
+the
 
 ## Related discussions and resources
 

@@ -68,7 +68,11 @@ r0 <- defaultgrid(lonlat)
 
 # Simplistic rasterization
 
-The most simple thing possible is to define a grid and simply populate that with values from points. Extend the grid by a small amount. 
+The most simple thing possible is to define a grid and populate that with values from points. 
+
+
+
+We extend the grid by a small amount, which is generally good practice. 
 
 ```{r}
 rasgrid <- function(xy, value, grid = NULL, ...) {
@@ -80,11 +84,13 @@ lastgrid <- rasgrid(lonlat, val, r0)
 plot(lastgrid)
 ```
 
-the main impact on the result here is the effect of pixel size, and the behaviour when there is more than one value per pixel. It really depends on the data **compare brokewest with saz?**
-
-
+The main influence on the result here is purely pixel size, and we must consider the behaviour used when there is more than one value per pixel.  
 
 # Thin plate spline interpolation. 
+
+This is the powerhouse behind GDAL's raster warping, and that suggests that we could
+leverage GDAL by creating a data set in the right format for it to warp to. 
+
 
 ```{r}
 library(fields)
@@ -216,6 +222,21 @@ plot(krigrid)
 
 ```
 
+# GAM
+
+Don't try this at home!  No stats-nouse here. 
+
+
+```{r}
+library(mgcv)
+library(dplyr)
+gamfit <- gam(temp ~ s(Lon)+ s(Lat), data = bw,family = gaussian, method = "REML")
+library(raster)
+g <- raster(extent(as.matrix(bw[c("Lon", "Lat")])), nrows = 50, ncols = 50)
+pred <- predict(gamfit, as.data.frame(g, xy = TRUE) %>% dplyr::rename(Lon = x, Lat = y) %>% dplyr::select(Lon, Lat))
+plot(setValues(g, c(pred)))
+```
+
 # fields
 
 ```{r}
@@ -253,7 +274,6 @@ akifun <- function(xy, value, grid = NULL, ...) {
 akigrid <- akifun(lonlat, val, grid = r0)
 plot(akigrid)
 ```
-
 
 # Hexagons? 
 
