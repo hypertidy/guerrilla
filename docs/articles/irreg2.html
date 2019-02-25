@@ -197,25 +197,13 @@
 <a href="#bilinear-triangulation-" class="anchor"></a>Bilinear triangulation.</h1>
 <p>This is identical to Matlab’s griddata(, method = “bilinear”)</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(geometry)</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="co">#&gt; Loading required package: magic</span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="co">#&gt; Loading required package: abind</span></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="co">#&gt; Attaching package: 'magic'</span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="co">#&gt; The following object is masked from 'package:raster':</span></a>
-<a class="sourceLine" id="cb7-7" data-line-number="7"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="co">#&gt;     shift</span></a>
-<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(sp)</a>
-<a class="sourceLine" id="cb7-10" data-line-number="10"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(guerrilla)</a>
-<a class="sourceLine" id="cb7-11" data-line-number="11"></a>
-<a class="sourceLine" id="cb7-12" data-line-number="12"></a>
-<a class="sourceLine" id="cb7-13" data-line-number="13">trigrid &lt;-<span class="st"> </span><span class="kw"><a href="../reference/tri_fun.html">tri_fun</a></span>(lonlat, val, r0)</a>
-<a class="sourceLine" id="cb7-14" data-line-number="14"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb7-15" data-line-number="15"><span class="co">#&gt;      PLEASE </span><span class="al">NOTE</span><span class="co">:  As of version 0.3-5, no degenerate (zero area) </span></a>
-<a class="sourceLine" id="cb7-16" data-line-number="16"><span class="co">#&gt;      regions are returned with the "Qt" option since the R </span></a>
-<a class="sourceLine" id="cb7-17" data-line-number="17"><span class="co">#&gt;      code removes them from the triangulation. </span></a>
-<a class="sourceLine" id="cb7-18" data-line-number="18"><span class="co">#&gt;      See help("delaunayn").</span></a>
-<a class="sourceLine" id="cb7-19" data-line-number="19"></a>
-<a class="sourceLine" id="cb7-20" data-line-number="20"><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/plot">plot</a></span>(trigrid)</a></code></pre></div>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(sp)</a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(guerrilla)</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb7-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6">trigrid &lt;-<span class="st"> </span><span class="kw"><a href="../reference/tri_fun.html">tri_fun</a></span>(lonlat, val, r0)</a>
+<a class="sourceLine" id="cb7-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb7-8" data-line-number="8"><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/plot">plot</a></span>(trigrid)</a></code></pre></div>
 <p><img src="irreg2_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 </div>
 <div id="delaunay-and-diriclet" class="section level1">
@@ -237,47 +225,44 @@
 <a class="sourceLine" id="cb8-13" data-line-number="13"><span class="co">#&gt; For an introduction to spatstat, type 'beginner'</span></a>
 <a class="sourceLine" id="cb8-14" data-line-number="14"><span class="co">#&gt; </span></a>
 <a class="sourceLine" id="cb8-15" data-line-number="15"><span class="co">#&gt; Attaching package: 'spatstat'</span></a>
-<a class="sourceLine" id="cb8-16" data-line-number="16"><span class="co">#&gt; The following object is masked from 'package:magic':</span></a>
+<a class="sourceLine" id="cb8-16" data-line-number="16"><span class="co">#&gt; The following object is masked from 'package:palr':</span></a>
 <a class="sourceLine" id="cb8-17" data-line-number="17"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb8-18" data-line-number="18"><span class="co">#&gt;     shift</span></a>
-<a class="sourceLine" id="cb8-19" data-line-number="19"><span class="co">#&gt; The following object is masked from 'package:palr':</span></a>
+<a class="sourceLine" id="cb8-18" data-line-number="18"><span class="co">#&gt;     col2hex</span></a>
+<a class="sourceLine" id="cb8-19" data-line-number="19"><span class="co">#&gt; The following object is masked from 'package:gstat':</span></a>
 <a class="sourceLine" id="cb8-20" data-line-number="20"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb8-21" data-line-number="21"><span class="co">#&gt;     col2hex</span></a>
-<a class="sourceLine" id="cb8-22" data-line-number="22"><span class="co">#&gt; The following object is masked from 'package:gstat':</span></a>
+<a class="sourceLine" id="cb8-21" data-line-number="21"><span class="co">#&gt;     idw</span></a>
+<a class="sourceLine" id="cb8-22" data-line-number="22"><span class="co">#&gt; The following objects are masked from 'package:raster':</span></a>
 <a class="sourceLine" id="cb8-23" data-line-number="23"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb8-24" data-line-number="24"><span class="co">#&gt;     idw</span></a>
-<a class="sourceLine" id="cb8-25" data-line-number="25"><span class="co">#&gt; The following objects are masked from 'package:raster':</span></a>
-<a class="sourceLine" id="cb8-26" data-line-number="26"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb8-27" data-line-number="27"><span class="co">#&gt;     area, rotate, shift</span></a>
-<a class="sourceLine" id="cb8-28" data-line-number="28"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(maptools)</a>
-<a class="sourceLine" id="cb8-29" data-line-number="29"><span class="co">#&gt; Checking rgeos availability: TRUE</span></a>
-<a class="sourceLine" id="cb8-30" data-line-number="30">rasterToOwin &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
-<a class="sourceLine" id="cb8-31" data-line-number="31">  <span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/owin">owin</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">xmin</a></span>(x), <span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">xmax</a></span>(x)), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">ymin</a></span>(x), <span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">ymax</a></span>(x)))</a>
-<a class="sourceLine" id="cb8-32" data-line-number="32">}</a>
-<a class="sourceLine" id="cb8-33" data-line-number="33">colfun &lt;-<span class="st"> </span>viridis<span class="op">::</span>viridis</a>
-<a class="sourceLine" id="cb8-34" data-line-number="34">rbase &lt;-<span class="st"> </span>r0</a>
-<a class="sourceLine" id="cb8-35" data-line-number="35">d &lt;-<span class="st"> </span>bw</a>
-<a class="sourceLine" id="cb8-36" data-line-number="36">xname &lt;-<span class="st"> "Lon"</span></a>
-<a class="sourceLine" id="cb8-37" data-line-number="37">yname &lt;-<span class="st"> "Lat"</span></a>
-<a class="sourceLine" id="cb8-38" data-line-number="38">varname &lt;-<span class="st"> "temp"</span></a>
-<a class="sourceLine" id="cb8-39" data-line-number="39">pObj &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/ppp">ppp</a></span>(d[[xname]], d[[yname]], <span class="dt">window =</span> <span class="kw">rasterToOwin</span>(rbase), <span class="dt">marks =</span> d[[varname]])</a>
-<a class="sourceLine" id="cb8-40" data-line-number="40"></a>
-<a class="sourceLine" id="cb8-41" data-line-number="41">lltes&lt;-<span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/delaunay">delaunay</a></span>(pObj)</a>
-<a class="sourceLine" id="cb8-42" data-line-number="42"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb8-43" data-line-number="43"><span class="co">#&gt;      PLEASE </span><span class="al">NOTE</span><span class="co">:  The components "delsgs" and "summary" of the</span></a>
-<a class="sourceLine" id="cb8-44" data-line-number="44"><span class="co">#&gt;  object returned by deldir() are now DATA FRAMES rather than</span></a>
-<a class="sourceLine" id="cb8-45" data-line-number="45"><span class="co">#&gt;  matrices (as they were prior to release 0.0-18).</span></a>
-<a class="sourceLine" id="cb8-46" data-line-number="46"><span class="co">#&gt;  See help("deldir").</span></a>
-<a class="sourceLine" id="cb8-47" data-line-number="47"><span class="co">#&gt;  </span></a>
-<a class="sourceLine" id="cb8-48" data-line-number="48"><span class="co">#&gt;      PLEASE </span><span class="al">NOTE</span><span class="co">: The process that deldir() uses for determining</span></a>
-<a class="sourceLine" id="cb8-49" data-line-number="49"><span class="co">#&gt;  duplicated points has changed from that used in version</span></a>
-<a class="sourceLine" id="cb8-50" data-line-number="50"><span class="co">#&gt;  0.0-9 of this package (and previously). See help("deldir").</span></a>
-<a class="sourceLine" id="cb8-51" data-line-number="51">meanval &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">numeric</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(lltes[[<span class="dv">3</span>]]))</a>
-<a class="sourceLine" id="cb8-52" data-line-number="52">  <span class="cf">for</span> (i <span class="cf">in</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq_along</a></span>(meanval)) {</a>
-<a class="sourceLine" id="cb8-53" data-line-number="53">  meanval[i] &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/mean">mean</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/marks">marks</a></span>(pObj[lltes[[<span class="dv">3</span>]][[i]]]))</a>
-<a class="sourceLine" id="cb8-54" data-line-number="54">       }</a>
-<a class="sourceLine" id="cb8-55" data-line-number="55"><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/plot">plot</a></span>(<span class="kw">as</span>(lltes, <span class="st">"SpatialPolygons"</span>), <span class="dt">col =</span> <span class="kw">colfun</span>(<span class="dv">20</span>)[<span class="kw">scl</span>(meanval)<span class="op">*</span><span class="dv">19</span> <span class="op">+</span><span class="st"> </span><span class="dv">1</span>])</a>
-<a class="sourceLine" id="cb8-56" data-line-number="56"><span class="kw"><a href="https://www.rdocumentation.org/packages/graphics/topics/points">points</a></span>(d[,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(xname, yname)])</a></code></pre></div>
+<a class="sourceLine" id="cb8-24" data-line-number="24"><span class="co">#&gt;     area, rotate, shift</span></a>
+<a class="sourceLine" id="cb8-25" data-line-number="25"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(maptools)</a>
+<a class="sourceLine" id="cb8-26" data-line-number="26"><span class="co">#&gt; Checking rgeos availability: TRUE</span></a>
+<a class="sourceLine" id="cb8-27" data-line-number="27">rasterToOwin &lt;-<span class="st"> </span><span class="cf">function</span>(x) {</a>
+<a class="sourceLine" id="cb8-28" data-line-number="28">  <span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/owin">owin</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">xmin</a></span>(x), <span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">xmax</a></span>(x)), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">ymin</a></span>(x), <span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/coordinates">ymax</a></span>(x)))</a>
+<a class="sourceLine" id="cb8-29" data-line-number="29">}</a>
+<a class="sourceLine" id="cb8-30" data-line-number="30">colfun &lt;-<span class="st"> </span>viridis<span class="op">::</span>viridis</a>
+<a class="sourceLine" id="cb8-31" data-line-number="31">rbase &lt;-<span class="st"> </span>r0</a>
+<a class="sourceLine" id="cb8-32" data-line-number="32">d &lt;-<span class="st"> </span>bw</a>
+<a class="sourceLine" id="cb8-33" data-line-number="33">xname &lt;-<span class="st"> "Lon"</span></a>
+<a class="sourceLine" id="cb8-34" data-line-number="34">yname &lt;-<span class="st"> "Lat"</span></a>
+<a class="sourceLine" id="cb8-35" data-line-number="35">varname &lt;-<span class="st"> "temp"</span></a>
+<a class="sourceLine" id="cb8-36" data-line-number="36">pObj &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/ppp">ppp</a></span>(d[[xname]], d[[yname]], <span class="dt">window =</span> <span class="kw">rasterToOwin</span>(rbase), <span class="dt">marks =</span> d[[varname]])</a>
+<a class="sourceLine" id="cb8-37" data-line-number="37"></a>
+<a class="sourceLine" id="cb8-38" data-line-number="38">lltes&lt;-<span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/delaunay">delaunay</a></span>(pObj)</a>
+<a class="sourceLine" id="cb8-39" data-line-number="39"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb8-40" data-line-number="40"><span class="co">#&gt;      PLEASE </span><span class="al">NOTE</span><span class="co">:  The components "delsgs" and "summary" of the</span></a>
+<a class="sourceLine" id="cb8-41" data-line-number="41"><span class="co">#&gt;  object returned by deldir() are now DATA FRAMES rather than</span></a>
+<a class="sourceLine" id="cb8-42" data-line-number="42"><span class="co">#&gt;  matrices (as they were prior to release 0.0-18).</span></a>
+<a class="sourceLine" id="cb8-43" data-line-number="43"><span class="co">#&gt;  See help("deldir").</span></a>
+<a class="sourceLine" id="cb8-44" data-line-number="44"><span class="co">#&gt;  </span></a>
+<a class="sourceLine" id="cb8-45" data-line-number="45"><span class="co">#&gt;      PLEASE </span><span class="al">NOTE</span><span class="co">: The process that deldir() uses for determining</span></a>
+<a class="sourceLine" id="cb8-46" data-line-number="46"><span class="co">#&gt;  duplicated points has changed from that used in version</span></a>
+<a class="sourceLine" id="cb8-47" data-line-number="47"><span class="co">#&gt;  0.0-9 of this package (and previously). See help("deldir").</span></a>
+<a class="sourceLine" id="cb8-48" data-line-number="48">meanval &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">numeric</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(lltes[[<span class="dv">3</span>]]))</a>
+<a class="sourceLine" id="cb8-49" data-line-number="49">  <span class="cf">for</span> (i <span class="cf">in</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq_along</a></span>(meanval)) {</a>
+<a class="sourceLine" id="cb8-50" data-line-number="50">  meanval[i] &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/mean">mean</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/marks">marks</a></span>(pObj[lltes[[<span class="dv">3</span>]][[i]]]))</a>
+<a class="sourceLine" id="cb8-51" data-line-number="51">       }</a>
+<a class="sourceLine" id="cb8-52" data-line-number="52"><span class="kw"><a href="https://www.rdocumentation.org/packages/raster/topics/plot">plot</a></span>(<span class="kw">as</span>(lltes, <span class="st">"SpatialPolygons"</span>), <span class="dt">col =</span> <span class="kw">colfun</span>(<span class="dv">20</span>)[<span class="kw">scl</span>(meanval)<span class="op">*</span><span class="dv">19</span> <span class="op">+</span><span class="st"> </span><span class="dv">1</span>])</a>
+<a class="sourceLine" id="cb8-53" data-line-number="53"><span class="kw"><a href="https://www.rdocumentation.org/packages/graphics/topics/points">points</a></span>(d[,<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(xname, yname)])</a></code></pre></div>
 <p><img src="irreg2_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"></a>
 <a class="sourceLine" id="cb9-2" data-line-number="2">lltes&lt;-<span class="kw"><a href="https://www.rdocumentation.org/packages/spatstat/topics/dirichlet">dirichlet</a></span>(pObj)</a>

@@ -38,7 +38,8 @@ tri_fun <- function(xy, value, grid = NULL, ...) {
   pid0 <- geometry::tsearch(xy[,1], xy[,2], tri, rxy[,1], rxy[, 2],
                             bary = TRUE)
   ok <- !is.na(pid0$idx)
-  r <- raster::setValues(grid, NA_real_)
-  r[ok] <- colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
-  r 
+  ## because min() is giving warnings, check raster
+  suppressWarnings( grid <- raster::setValues(grid, NA_real_))
+  grid[ok] <- colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
+  grid
 }

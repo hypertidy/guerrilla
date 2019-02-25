@@ -18,35 +18,24 @@ knitr::opts_chunk$set(
 
 The goal of guerrilla is to provide an easy introduction to interpolation of irregular data. 
 The motivation is to help find a simple answer, not to ensure you do the most rigourous
-modelling possible (that's *your* job!). We think the tools shouldn't get in the way 
-of exploring.
+modelling possible (that's *your* job!). 
 
-For now, there's a vignette with a series of examples of data interpolation in R. 
+We think the tools shouldn't get in the way of exploring and not everything **spatial** is *geo-spatial*.
 
-http://mdsumner.github.io/guerrilla/articles/irreg2.html
 
-This package really only provides a few functions used, it's the examples that show how
-to use a wide variety of R packages for **this kind of thing**. 
 
-For actual modelling be sure to check out more formal resources. 
-
-https://cran.r-project.org/web/views/Spatial.html
-
-http://r-spatial.org/
-
-(yes this one's different:)
-
-http://rspatial.org/
-
-# TODO
+## TODO
 
 Raise issues here if you want something or have questions!
 
-Related QGIS resources: 
+## Related discussions and resources
+
+https://statnmap.com/2018-10-28-play-with-spatial-tools-on-3d-cells-images/
 
 https://docs.qgis.org/2.8/en/docs/gentle_gis_introduction/spatial_analysis_interpolation.html
 
 
+---
 
 Please note that this project is released with a [Contributor Code of Conduct](CONDUCT.md).
   By participating in this project you agree to abide by its terms.
