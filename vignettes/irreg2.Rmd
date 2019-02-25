@@ -24,7 +24,6 @@ Define utility functions for repeated usage, and load required packages.
 scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
 library(guerrilla)
 library(raster)
-library(rgdal)
 library(gstat)
 library(fields)
 library(akima)
