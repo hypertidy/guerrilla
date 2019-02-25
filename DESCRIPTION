@@ -26,7 +26,7 @@ Suggests:
     gstat,
     palr,
     readxl,
-    rgdal,
+    reproj,
     covr,
     testthat
 VignetteBuilder: knitr
