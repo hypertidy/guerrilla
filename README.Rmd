@@ -11,7 +11,10 @@ knitr::opts_chunk$set(
 )
 ```
 
-[![Travis-CI Build Status](https://travis-ci.org/mdsumner/guerrilla.svg?branch=master)](https://travis-ci.org/mdsumner/guerrilla)[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/mdsumner/guerrilla?branch=master&svg=true)](https://ci.appveyor.com/project/mdsumner/guerrilla)[![](http://www.r-pkg.org/badges/version/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![Coverage Status](https://img.shields.io/codecov/c/github/mdsumner/guerrilla/master.svg)](https://codecov.io/github/mdsumner/guerrilla?branch=master)
+
+
+  [![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![Travis-CI Build Status](http://badges.herokuapp.com/travis/mdsumner/guerrilla?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/mdsumner/guerrilla)
+[![Build Status](http://badges.herokuapp.com/travis/mdsumner/guerrilla?branch=master&env=BUILD_NAME=osx_release&label=osx)](https://travis-ci.org/mdsumner/guerrilla)[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/mdsumner/guerrilla?branch=master&svg=true)](https://ci.appveyor.com/project/mdsumner/guerrilla)[![](http://www.r-pkg.org/badges/version/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![Coverage Status](https://img.shields.io/codecov/c/github/mdsumner/guerrilla/master.svg)](https://codecov.io/github/mdsumner/guerrilla?branch=master)
 
 
 # guerrilla
