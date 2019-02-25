@@ -3,7 +3,10 @@
 title: "Interpolating irregular data"
 author: "Michael D. Sumner"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    fig_width: 8
+    fig_height: 8
 vignette: >
   %\VignetteIndexEntry{Irregular data interpolation}
   %\VignetteEncoding{UTF-8}
@@ -81,7 +84,7 @@ rasgrid <- function(xy, value, grid = NULL, ...) {
 }
 lastgrid <- rasgrid(lonlat, val, r0)
 
-plot(lastgrid)
+plot(lastgrid, asp = "")
 ```
 
 The main influence on the result here is purely pixel size, and we must consider the behaviour used when there is more than one value per pixel.  
@@ -105,7 +108,7 @@ tpsgrid <- clamp(tpsgrid, minmax[1], minmax[2])
 ## this shows the error
 tpsSEgrid <- tpsfun(lonlat, val, r0, fun = predictSE)
 
-plot(tpsgrid)
+plot(tpsgrid, asp = "")
 ```
 
 
@@ -122,7 +125,7 @@ library(guerrilla)
 
 trigrid <- tri_fun(lonlat, val, r0)
 
-plot(trigrid)
+plot(trigrid, asp = "")
 ```
 
 
@@ -133,6 +136,7 @@ What about Delaunay and Dirichlet without interpolation?
 
 
 ```{r}
+graphics.off()
 ## input must be ppp
 library(spatstat)
 library(maptools)
@@ -152,7 +156,7 @@ meanval <- numeric(length(lltes[[3]]))
   for (i in seq_along(meanval)) {
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
        }
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1], asp = "")
 points(d[,c(xname, yname)])
 
 lltes<-dirichlet(pObj)
@@ -161,7 +165,7 @@ meanval <- numeric(length(lltes[[3]]))
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
   }
 
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1], asp = NA)
 points(d[,c(xname, yname)])
 
 ```
@@ -175,9 +179,9 @@ Grid interpolation from Dirichlet or Delaunay. This is much slower than the tria
 ```{r}
  
  fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
- plot(rasterFromXYZ(as.data.frame(fcs.dir)))
+ plot(rasterFromXYZ(as.data.frame(fcs.dir)), asp = NA)
  fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
- plot(rasterFromXYZ(as.data.frame(fcs.del)))
+ plot(rasterFromXYZ(as.data.frame(fcs.del)), asp = NA)
 ```
 
 # IDW
@@ -197,7 +201,7 @@ idwfun <- function(xy, value, grid = NULL, ...) {
 
 dw <- idwfun(lonlat, val, r0)
 dw <- idwfun(lonlat, val, r0, set = list(idp = 1.5))
-plot(dw);contour(trigrid, add = TRUE)
+plot(dw, asp = NA);contour(trigrid, add = TRUE)
 
 
 ```
@@ -218,13 +222,14 @@ krifun <- function(xy, value, grid = NULL, ...) {
 
 }
 krigrid <- krifun(lonlat, val, grid = r0)
-plot(krigrid)
+plot(krigrid, asp = "")
 
 ```
 
 # GAM
 
-Don't try this at home!  No stats-nouse here. 
+This needs work, mgcv has more promise than this shows ;)
+
 
 
 ```{r}
@@ -234,7 +239,7 @@ gamfit <- gam(temp ~ s(Lon)+ s(Lat), data = bw,family = gaussian, method = "REML
 library(raster)
 g <- raster(extent(as.matrix(bw[c("Lon", "Lat")])), nrows = 50, ncols = 50)
 pred <- predict(gamfit, as.data.frame(g, xy = TRUE) %>% dplyr::rename(Lon = x, Lat = y) %>% dplyr::select(Lon, Lat))
-plot(setValues(g, c(pred)))
+plot(setValues(g, c(pred)), asp = "")
 ```
 
 # fields
@@ -253,7 +258,7 @@ fsmfun <- function(xy, value, grid = NULL) {
 }
 
 fsmgrid <- fsmfun(lonlat, val, r0)
-plot(fsmgrid)
+plot(fsmgrid, asp = "")
 
 ```
 
@@ -272,14 +277,20 @@ akifun <- function(xy, value, grid = NULL, ...) {
 }
 
 akigrid <- akifun(lonlat, val, grid = r0)
-plot(akigrid)
+plot(akigrid, asp = "")
 ```
 
-# Hexagons? 
+# Others
 
-(See hexbin, spatstat). 
 
-## Along-track distance
+Hexagons: see hexbin, spatstat. 
+
+
+sm package
+
+
+
+# Along-track distance
 Previously we used Latitude as our x-axis, this is not very sensible since the track visits the same latitudes at different longitudes. As a simple improvement let's build an along-track axis. 
 
 ```{r,eval=FALSE}
