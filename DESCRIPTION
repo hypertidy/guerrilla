@@ -21,7 +21,13 @@ Suggests:
     maptools,
     geometry,
     viridis,
-    rmarkdown, 
-    fields, gstat, palr, readxl, rgdal
+    rmarkdown,
+    fields,
+    gstat,
+    palr,
+    readxl,
+    rgdal,
+    covr,
+    testthat
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)

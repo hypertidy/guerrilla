@@ -1,3 +1,3 @@
-# guerrilla 0.0.0.9000
+# guerrilla 0.1.0
 
 * Yuge speed up to `tri_fun` by using `geometry::tsearch`.

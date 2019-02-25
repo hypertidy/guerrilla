@@ -12,5 +12,5 @@ tri_pip(tri, pts)
 \item{pts}{input points}
 }
 \description{
-Identify point-in-triangle by conversion to polygons
+This functio was used by an early version of \code{tri_fun}.
 }

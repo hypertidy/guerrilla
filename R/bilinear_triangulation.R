@@ -1,6 +1,7 @@
 
 #' Identify point-in-triangle by conversion to polygons
-#'
+#' 
+#' This functio was used by an early version of `tri_fun`. 
 #' @param tri list P n*2 coordinates and T matrix of n*3 indices defining triangles
 #' @param pts input points
 #' @importFrom sp Polygon Polygons SpatialPolygons CRS proj4string over
@@ -8,7 +9,7 @@ tri_pip <- function(tri, pts) {
   ps <- lapply(split(tri$T, seq(nrow(tri$T))), function(x) Polygon(tri$P[c(x, x[1]), ]))
   sp <- lapply(seq_along(ps), function(x) Polygons(ps[x], x))
   spp <- SpatialPolygons(sp, proj4string = CRS(proj4string(pts)))
-  over(pts, spp)
+  as.integer(sp::over(pts, spp))
 }
 
 
@@ -23,11 +24,13 @@ tri_pip <- function(tri, pts) {
 #' @return raster
 #' @export
 #' @examples
-#' r <- raster::setExtent(raster::raster(volcano), raster::extent(0, ncol(volcano), 0, nrow(volcano)))
+#' zero_extent <- raster::extent(0, ncol(volcano), 0, nrow(volcano))
+#' r <- raster::setExtent(raster::raster(volcano), zero_extent)
 #' xy <- raster::sampleRandom(r, size = 150, xy = TRUE)[, 1:2, drop = FALSE]
 #' tri_est <- tri_fun(xy, raster::extract(r, xy))
 #' 
-#' tri_est2 <- tri_fun(xy, raster::extract(r, xy), grid = raster::raster(raster::extent(xy) ,res = 0.1))
+#' grd <- raster::raster(raster::extent(xy) ,res = 0.1)
+#' tri_est2 <- tri_fun(xy, raster::extract(r, xy), grid = grd)
 tri_fun <- function(xy, value, grid = NULL, ...) {
   if (is.null(grid)) grid <- defaultgrid(xy)
   tri <- geometry::delaunayn(xy); 
