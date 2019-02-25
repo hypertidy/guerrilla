@@ -19,7 +19,7 @@ Suggests:
     knitr,
     spatstat,
     maptools,
-    geometry,
+    geometry (>= 0.4.0),
     viridis,
     rmarkdown,
     fields,
