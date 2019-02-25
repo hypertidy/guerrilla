@@ -7,7 +7,7 @@
 \title{guerrilla: Illustrate Various Methods of Interpolation for Irregular Data}
 \description{
 Examples of interpolating irregular data, to illustrate the mechanics
-of various methods.
+  of various methods.
 }
 \seealso{
 Useful links:

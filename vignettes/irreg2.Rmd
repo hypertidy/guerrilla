@@ -35,7 +35,7 @@ Read the zooplankton data.
 
 ```{r}
 library(readxl)
-bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "irreg"))
+bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "guerrilla", mustWork = TRUE))
 summary(bw[,1:10])
 lonlat <- as.matrix(bw[, c("Lon", "Lat")])
 val <- bw$temp

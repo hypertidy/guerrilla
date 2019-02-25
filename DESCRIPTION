@@ -1,5 +1,5 @@
 Package: guerrilla
-Version: 0.0.0.9000
+Version: 0.1.0
 Title: Illustrate Various Methods of Interpolation for Irregular Data
 Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre")), 
              person("Marcelino", "de la Cruz", role = "ctb",  comment = "wrote maybetin example function on R-Sig-Geo"), 
@@ -12,7 +12,7 @@ LazyData: true
 ByteCompile: true
 URL: https://github.com/mdsumner/guerrilla
 BugReports: https://github.com/mdsumner/guerrilla/issues
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Depends: R (>= 3.3.0)
 Imports: akima, raster, sp
 Suggests: 

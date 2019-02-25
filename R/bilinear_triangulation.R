@@ -13,8 +13,8 @@ tri_pip <- function(tri, pts) {
 
 
 
-#' Title
-#'
+#' Interpolation to a regular grid via triangulation
+#' 
 #' @param xy coordinates
 #' @param value value to interpolate
 #' @param grid grid to use
@@ -22,28 +22,20 @@ tri_pip <- function(tri, pts) {
 #'
 #' @return raster
 #' @export
+#' @examples
+#' r <- raster::setExtent(raster::raster(volcano), raster::extent(0, ncol(volcano), 0, nrow(volcano)))
+#' xy <- raster::sampleRandom(r, size = 150, xy = TRUE)[, 1:2, drop = FALSE]
+#' tri_est <- tri_fun(xy, raster::extract(r, xy))
+#' 
+#' tri_est2 <- tri_fun(xy, raster::extract(r, xy), grid = raster::raster(raster::extent(xy) ,res = 0.1))
 tri_fun <- function(xy, value, grid = NULL, ...) {
   if (is.null(grid)) grid <- defaultgrid(xy)
   tri <- geometry::delaunayn(xy); 
-  #tri <- rgl::triangulate(xy)
-  #tri <- deldir::deldir(xy)
-  #tri <- RTriangle::triangulate(pslg(P = xy))
   rxy <- sp::coordinates(grid)
-  
-  ## triangle id for every point
-  pid <- tri_pip(list(T = tri, P = xy), sp::SpatialPoints(rxy))
-  ok <- !is.na(pid)
-  
-  ## estimated value from interpolation
-  est <- rep(NA_real_, nrow(rxy))
-  for (i in which(ok)) {
-    ## triangle points
-    tripts <- xy[tri[pid[i], ], ]
-    ## grid points inside the triangle
-    rpts <- rxy[pid == pid[i] & !is.na(pid) , , drop = FALSE]
-    wgts <- geometry::cart2bary(tripts, rpts)
-    vals <- matrix(value[tri[pid[i], ]], ncol = 3, nrow = nrow(wgts), byrow = TRUE)
-    est[pid == pid[i] & !is.na(pid)] <- rowSums(vals * wgts)
-  }
-  raster::setValues(grid, est)
+  pid0 <- geometry::tsearch(xy[,1], xy[,2], tri, rxy[,1], rxy[, 2],
+                            bary = TRUE)
+  ok <- !is.na(pid0$idx)
+  r <- raster::setValues(grid, NA_real_)
+  r[ok] <- colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
+  r 
 }

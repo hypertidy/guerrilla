@@ -2,7 +2,7 @@
 % Please edit documentation in R/bilinear_triangulation.R
 \name{tri_fun}
 \alias{tri_fun}
-\title{Title}
+\title{Interpolation to a regular grid via triangulation}
 \usage{
 tri_fun(xy, value, grid = NULL, ...)
 }
@@ -19,5 +19,12 @@ tri_fun(xy, value, grid = NULL, ...)
 raster
 }
 \description{
-Title
+Interpolation to a regular grid via triangulation
+}
+\examples{
+r <- raster::setExtent(raster::raster(volcano), raster::extent(0, ncol(volcano), 0, nrow(volcano)))
+xy <- raster::sampleRandom(r, size = 150, xy = TRUE)[, 1:2, drop = FALSE]
+tri_est <- tri_fun(xy, raster::extract(r, xy))
+
+tri_est2 <- tri_fun(xy, raster::extract(r, xy), grid = raster::raster(raster::extent(xy) ,res = 0.1))
 }
