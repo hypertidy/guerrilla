@@ -6,7 +6,6 @@ mesh_triangles <- function(x, triangles, grid = NULL, n = 128) {
     grid <- raster::raster(raster::extent(x[,1:2]), 
                            nrows = n * ratio, ncols = n)
   }
-  print(n)
   ## coordinates of the pixels (centres)
   rxy <- raster::xyFromCell(grid, seq_len(raster::ncell(grid)))
   ## ID for pixels + weighting per each triangle corner
