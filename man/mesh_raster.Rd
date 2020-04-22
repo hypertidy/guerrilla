@@ -29,6 +29,9 @@ Raster
 Create a raster by interpolating across triangles
 }
 \details{
+At the moment, mesh_raster is identical to \link{tri_fun}
+for the matrix x-y-z case, but adds capability for
+a mesh3d object (of triangles).
 Barycentric interpolation is used to efficiently obtain
 a within-triangle estimate of a field of values
 }
@@ -39,4 +42,24 @@ grid <- mesh_raster(x, n = 256)
 raster::plot(grid, col = grey.colors(21), 
     breaks = quantile(grid, seq(0, 1, length = 22), na.rm = TRUE))
 anglr::plot3d(grid)
+
+## interpolate from raw points
+xyz <- quakes[c("long", "lat", "depth")]
+xyz$depth <- -xyz$depth
+gx <- mesh_raster(xyz)
+rat <- 1/cos(mean(xyz[["lat"]]) * pi/180)
+raster::image(gx, asp = rat, 
+  col = hcl.colors(12, "YlOrRd"))
+maps::map(add = TRUE)
+points(xyz, pch = "+", cex = 0.3)
+## add some dummy points (we aren't modelling the world)
+
+xex <- cbind(expand.grid(long = range(xyz$long), 
+                         lat = range(xyz$lat)), depth = 0)
+g2 <- mesh_raster(rbind(xex, xyz))
+raster::image(g2, asp = rat)
+maps::map(add = TRUE)
+points(xyz, pch = "+", cex = 0.3)
+anglr::plot3d(g2); rgl::aspect3d(1, rat, 0.1)
+rgl::points3d(xyz$long, xyz$lat, xyz$depth + 30)
 }

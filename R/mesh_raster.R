@@ -22,11 +22,22 @@ mesh_triangles <- function(x, triangles, grid = NULL, n = 128) {
   #           colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
   grid
 }
-
+.tri2quads <- quadmesh:::triangulate_quads
+function(quad_index, clockwise = FALSE) {
+  
+  if (clockwise){
+    matrix(rbind(quad_index[c(1L, 2L, 4L), ], quad_index[c(2L, 3L, 4L), ]), 3L)
+  } else {
+    matrix(rbind(quad_index[c(1L, 4L, 2L), ], quad_index[c(4L, 3L, 2L), ]), 3L)
+  }
+}
 #' Mesh raster
 #' 
 #' Create a raster by interpolating across triangles
 #' 
+#' At the moment, mesh_raster is identical to [tri_fun]
+#' for the matrix x-y-z case, but adds capability for 
+#' a mesh3d object (of triangles). 
 #' Barycentric interpolation is used to efficiently obtain
 #' a within-triangle estimate of a field of values
 #'
@@ -44,6 +55,26 @@ mesh_triangles <- function(x, triangles, grid = NULL, n = 128) {
 #' raster::plot(grid, col = grey.colors(21), 
 #'     breaks = quantile(grid, seq(0, 1, length = 22), na.rm = TRUE))
 #' anglr::plot3d(grid)
+#' 
+#' ## interpolate from raw points
+#' xyz <- quakes[c("long", "lat", "depth")]
+#' xyz$depth <- -xyz$depth
+#' gx <- mesh_raster(xyz)
+#' rat <- 1/cos(mean(xyz[["lat"]]) * pi/180)
+#' raster::image(gx, asp = rat, 
+#'   col = hcl.colors(12, "YlOrRd"))
+#' maps::map(add = TRUE)
+#' points(xyz, pch = "+", cex = 0.3)
+#' ## add some dummy points (we aren't modelling the world)
+#' 
+#' xex <- cbind(expand.grid(long = range(xyz$long), 
+#'                          lat = range(xyz$lat)), depth = 0)
+#' g2 <- mesh_raster(rbind(xex, xyz))
+#' raster::image(g2, asp = rat)
+#' maps::map(add = TRUE)
+#' points(xyz, pch = "+", cex = 0.3)
+#' anglr::plot3d(g2); rgl::aspect3d(1, rat, 0.1)
+#' rgl::points3d(xyz$long, xyz$lat, xyz$depth + 30)
 mesh_raster <- function(x, grid = NULL, n = 128) {
   UseMethod("mesh_raster")
 }
@@ -51,6 +82,9 @@ mesh_raster <- function(x, grid = NULL, n = 128) {
 #' @export
 mesh_raster.mesh3d <- function(x, grid = NULL, n = 128) {
   pts <- t(x$vb[1:3, ])
+  if (is.null(x[["it"]])) {
+    x[["it"]] <- .tri2quads(x[["ib"]])
+  }
   ## triangle index - rows are .vx0, .vx1, .vx2 for geometry pkg
   tri <- t(x$it)
   mesh_triangles(pts, triangles = tri, grid = grid, n = n)

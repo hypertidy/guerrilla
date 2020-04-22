@@ -41,7 +41,9 @@ Suggests:
     covr,
     testthat,
     mgcv,
-    dplyr
+    dplyr,
+    maps,
+    rgl
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Remotes: hypertidy/anglr
