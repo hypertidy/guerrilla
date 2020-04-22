@@ -16,8 +16,8 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
-URL: https://github.com/mdsumner/guerrilla
-BugReports: https://github.com/mdsumner/guerrilla/issues
+URL: https://github.com/hypertidy/guerrilla
+BugReports: https://github.com/hypertidy/guerrilla/issues
 RoxygenNote: 7.1.0
 Depends: R (>= 3.3.0)
 Imports: 

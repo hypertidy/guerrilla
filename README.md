@@ -3,14 +3,14 @@
 
 [![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 [![Travis-CI Build
-Status](http://badges.herokuapp.com/travis/mdsumner/guerrilla?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/mdsumner/guerrilla)
+Status](http://badges.herokuapp.com/travis/hypertidy/guerrilla?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/hypertidy/guerrilla)
 [![Build
-Status](http://badges.herokuapp.com/travis/mdsumner/guerrilla?branch=master&env=BUILD_NAME=osx_release&label=osx)](https://travis-ci.org/mdsumner/guerrilla)[![AppVeyor
+Status](http://badges.herokuapp.com/travis/hypertidy/guerrilla?branch=master&env=BUILD_NAME=osx_release&label=osx)](https://travis-ci.org/hypertidy/guerrilla)[![AppVeyor
 Build
-Status](https://ci.appveyor.com/api/projects/status/github/mdsumner/guerrilla?branch=master&svg=true)](https://ci.appveyor.com/project/mdsumner/guerrilla)[![](http://www.r-pkg.org/badges/version/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![CRAN
+Status](https://ci.appveyor.com/api/projects/status/github/hypertidy/guerrilla?branch=master&svg=true)](https://ci.appveyor.com/project/hypertidy/guerrilla)[![](http://www.r-pkg.org/badges/version/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![CRAN
 RStudio mirror
 downloads](http://cranlogs.r-pkg.org/badges/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![Coverage
-Status](https://img.shields.io/codecov/c/github/mdsumner/guerrilla/master.svg)](https://codecov.io/github/mdsumner/guerrilla?branch=master)
+Status](https://img.shields.io/codecov/c/github/hypertidy/guerrilla/master.svg)](https://codecov.io/github/hypertidy/guerrilla?branch=master)
 
 # guerrilla
 
@@ -33,5 +33,5 @@ Raise issues here if you want something or have questions\!
 -----
 
 Please note that this project is released with a [Contributor Code of
-Conduct](CONDUCT.md). By participating in this project you agree to
-abide by its terms.
+Conduct](https://github.com/hypertidy/guerrilla/blob/master/CONDUCT.md).
+By participating in this project you agree to abide by its terms.

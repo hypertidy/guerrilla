@@ -12,8 +12,8 @@ Examples of interpolating irregular data, to illustrate the
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/mdsumner/guerrilla}
-  \item Report bugs at \url{https://github.com/mdsumner/guerrilla/issues}
+  \item \url{https://github.com/hypertidy/guerrilla}
+  \item Report bugs at \url{https://github.com/hypertidy/guerrilla/issues}
 }
 
 }
