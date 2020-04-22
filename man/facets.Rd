@@ -4,8 +4,15 @@
 \alias{facets}
 \title{Title}
 \usage{
-facets(X, nx, ny, x = NULL, y = NULL, na.v = 0,
-  method = c("dirichlet", "delaunay"))
+facets(
+  X,
+  nx,
+  ny,
+  x = NULL,
+  y = NULL,
+  na.v = 0,
+  method = c("dirichlet", "delaunay")
+)
 }
 \arguments{
 \item{X}{spatstat object}

@@ -22,12 +22,7 @@ answer, not to ensure you do the most rigourous modelling possible
 We think the tools shouldn’t get in the way of exploring and not
 everything **spatial** is *geo-spatial*.
 
-## TODO
-
 Raise issues here if you want something or have questions\!
-
-I’m currently figuring out how I want this to work, but I think
-the
 
 ## Related discussions and resources
 

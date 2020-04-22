@@ -25,6 +25,7 @@ knitr::opts_chunk$set(
 # Setup
 
 Define utility functions for repeated usage, and load required packages. 
+
 ```{r}
 scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
 library(guerrilla)
@@ -47,7 +48,7 @@ minmax <- c(-1.8, 40)
 
 rval <- pretty(val, n = 15)
 
-cols <- sstPal(length(rval) - 1)
+cols <- sst_pal(length(rval) - 1)
 
 
 ```
@@ -91,8 +92,9 @@ The main influence on the result here is purely pixel size, and we must consider
 
 # Thin plate spline interpolation. 
 
-This is the powerhouse behind GDAL's raster warping, and that suggests that we could
-leverage GDAL by creating a data set in the right format for it to warp to. 
+This is the powerhouse behind GDAL's raster warping, and that suggests that we
+could leverage GDAL by creating a data set in the right format for it to warp
+to.
 
 
 ```{r}
@@ -124,7 +126,8 @@ library(guerrilla)
 
 
 trigrid <- tri_fun(lonlat, val, r0)
-
+## should be identical, generalizing for mesh3d use
+t2 <- mesh_raster(cbind(lonlat, val), r0)
 plot(trigrid, asp = "")
 ```
 

@@ -3,7 +3,9 @@
 \name{bathy}
 \alias{bathy}
 \title{Bathymetry data.}
-\format{A raster}
+\format{
+A raster
+}
 \description{
 \code{bathy} is a simple polygon region layer to sit over the SST data.
 }

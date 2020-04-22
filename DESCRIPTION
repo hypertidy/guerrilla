@@ -1,21 +1,31 @@
 Package: guerrilla
-Version: 0.1.0
+Version: 0.1.0.9001
 Title: Illustrate Various Methods of Interpolation for Irregular Data
-Authors@R: c(person("Michael", "Sumner", email = "mdsumner@gmail.com", role = c("aut", "cre")), 
-             person("Marcelino", "de la Cruz", role = "ctb",  comment = "wrote maybetin example function on R-Sig-Geo"), 
-             person("Tomas", "Remenyi", role = "ctb"))
-Description: Examples of interpolating irregular data, to illustrate the mechanics
-  of various methods. 
+Authors@R: c(person("Michael", "Sumner", 
+             email = "mdsumner@gmail.com", 
+             role = c("aut", "cre")), 
+            person("Marcelino", "de la Cruz", 
+             role = "ctb",  
+             comment = "wrote maybetin example function on R-Sig-Geo"), 
+            person("Tomas", "Remenyi", 
+             role = "ctb")
+            )
+Description: Examples of interpolating irregular data, to illustrate the 
+ mechanics of various methods and some easy tools to run them. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
 URL: https://github.com/mdsumner/guerrilla
 BugReports: https://github.com/mdsumner/guerrilla/issues
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.0
 Depends: R (>= 3.3.0)
-Imports: raster, sp
+Imports: 
+    raster,
+    sp
 Suggests:
+    anglr,
+    Rvcg,
     akima,
     knitr,
     spatstat,
@@ -34,3 +44,4 @@ Suggests:
     dplyr
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
+Remotes: hypertidy/anglr

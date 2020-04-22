@@ -6,8 +6,8 @@
 \alias{guerrilla-package}
 \title{guerrilla: Illustrate Various Methods of Interpolation for Irregular Data}
 \description{
-Examples of interpolating irregular data, to illustrate the mechanics
-  of various methods.
+Examples of interpolating irregular data, to illustrate the 
+ mechanics of various methods and some easy tools to run them.
 }
 \seealso{
 Useful links:

@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Identify point-in-triangle by conversion to polygons — tri_pip • guerrilla</title>
+<title>Mesh raster — mesh_raster • guerrilla</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="Identify point-in-triangle by conversion to polygons — tri_pip" />
-<meta property="og:description" content="This functio was used by an early version of tri_fun." />
+<meta property="og:title" content="Mesh raster — mesh_raster" />
+<meta property="og:description" content="Create a raster by interpolating across triangles" />
 
 
 
@@ -123,31 +123,57 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Identify point-in-triangle by conversion to polygons</h1>
-    <small class="dont-index">Source: <a href='https://github.com/mdsumner/guerrilla/blob/master/R/bilinear_triangulation.R'><code>R/bilinear_triangulation.R</code></a></small>
-    <div class="hidden name"><code>tri_pip.Rd</code></div>
+    <h1>Mesh raster</h1>
+    <small class="dont-index">Source: <a href='https://github.com/mdsumner/guerrilla/blob/master/R/mesh_raster.R'><code>R/mesh_raster.R</code></a></small>
+    <div class="hidden name"><code>mesh_raster.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>This functio was used by an early version of <code>tri_fun</code>.</p>
+    <p>Create a raster by interpolating across triangles</p>
     </div>
 
-    <pre class="usage"><span class='fu'>tri_pip</span>(<span class='no'>tri</span>, <span class='no'>pts</span>)</pre>
+    <pre class="usage"><span class='fu'>mesh_raster</span>(<span class='no'>x</span>, <span class='kw'>grid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>128</span>)
+
+<span class='co'># S3 method for mesh3d</span>
+<span class='fu'>mesh_raster</span>(<span class='no'>x</span>, <span class='kw'>grid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>128</span>)
+
+<span class='co'># S3 method for matrix</span>
+<span class='fu'>mesh_raster</span>(<span class='no'>x</span>, <span class='kw'>grid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>128</span>)
+
+<span class='co'># S3 method for data.frame</span>
+<span class='fu'>mesh_raster</span>(<span class='no'>x</span>, <span class='kw'>grid</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>128</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>tri</th>
-      <td><p>list P n<em>2 coordinates and T matrix of n</em>3 indices defining triangles</p></td>
+      <th>x</th>
+      <td><p>matrix of points, or a mesh3d</p></td>
     </tr>
     <tr>
-      <th>pts</th>
-      <td><p>input points</p></td>
+      <th>grid</th>
+      <td><p>raster to populate</p></td>
+    </tr>
+    <tr>
+      <th>n</th>
+      <td><p>grid size of raster if 'grid' not supplied</p></td>
     </tr>
     </table>
 
+    <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
+    <p>Raster</p>
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>Barycentric interpolation is used to efficiently obtain
+a within-triangle estimate of a field of values</p>
+
+    <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"humface"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"Rvcg"</span>)
+<span class='no'>x</span> <span class='kw'>&lt;-</span> <span class='no'>humface</span>
+<span class='no'>grid</span> <span class='kw'>&lt;-</span> <span class='fu'>mesh_raster</span>(<span class='no'>x</span>, <span class='kw'>n</span> <span class='kw'>=</span> <span class='fl'>256</span>)
+<span class='kw pkg'>raster</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/raster/man/plot.html'>plot</a></span>(<span class='no'>grid</span>, <span class='kw'>col</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/grDevices/gray.colors.html'>grey.colors</a></span>(<span class='fl'>21</span>),
+    <span class='kw'>breaks</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/stats/quantile.html'>quantile</a></span>(<span class='no'>grid</span>, <span class='fu'><a href='https://rdrr.io/r/base/seq.html'>seq</a></span>(<span class='fl'>0</span>, <span class='fl'>1</span>, <span class='kw'>length</span> <span class='kw'>=</span> <span class='fl'>22</span>), <span class='kw'>na.rm</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>))</div><div class='img'><img src='mesh_raster-1.png' alt='' width='700' height='433' /></div><div class='input'><span class='kw pkg'>anglr</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/anglr/man/plot3d.html'>plot3d</a></span>(<span class='no'>grid</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

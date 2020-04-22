@@ -9,6 +9,8 @@ xy <- raster::sampleRandom(r, size = 150, xy = TRUE)[, 1:2, drop = FALSE]
 test_that("tri_fun works", {
   v0 <- raster::extract(r, xy)
   tri_est <- tri_fun(xy, v0) %>% expect_s4_class("RasterLayer")
+  tri_est2 <- mesh_raster(cbind(xy, v0))
+  expect_s4_class(tri_est2, "BasicRaster")
   expect_equal(dim(tri_est), c(50L, 60L, 1L))
   expect_true(sum(values(tri_est), na.rm = TRUE) > 360000)
 })
