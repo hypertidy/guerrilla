@@ -6,6 +6,7 @@ mesh_triangles <- function(x, triangles, grid = NULL, n = 128) {
     grid <- raster::raster(raster::extent(x[,1:2]), 
                            nrows = n * ratio, ncols = n)
   }
+  print(n)
   ## coordinates of the pixels (centres)
   rxy <- raster::xyFromCell(grid, seq_len(raster::ncell(grid)))
   ## ID for pixels + weighting per each triangle corner
@@ -102,7 +103,7 @@ mesh_raster.matrix <- function(x, grid = NULL, n = 128) {
 #' @export
 mesh_raster.data.frame <- function(x, grid = NULL, n = 128) {
   if (dim(x)[2] < 3) stop("input must be a matrix or data frame of 3 numeric columns")
-  mesh_raster(as.matrix(x))
+  mesh_raster(as.matrix(x), grid = grid, n = n)
 }
 
 
