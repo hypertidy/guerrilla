@@ -1,5 +1,7 @@
 # guerilla dev
 
+* Test. 
+
 * New function `mesh_raster()` a generalization of `tri_fun()` now
 also works with 'mesh3d' input. 
 
