@@ -2,7 +2,7 @@ context("test-facets")
 
 
 d <- readxl::read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "guerrilla", mustWork = TRUE))
-library(spatstat)
+library(spatstat.geom)
 library(maptools)
 library(raster)
 rasterToOwin <- function(x) {

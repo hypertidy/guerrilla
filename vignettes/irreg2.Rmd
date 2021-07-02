@@ -8,7 +8,7 @@ output:
     fig_width: 8
     fig_height: 8
 vignette: >
-  %\VignetteIndexEntry{Irregular data interpolation}
+  %\VignetteIndexEntry{Interpolating irregular data}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -141,7 +141,7 @@ What about Delaunay and Dirichlet without interpolation?
 ```{r}
 graphics.off()
 ## input must be ppp
-library(spatstat)
+library(spatstat.geom)
 library(maptools)
 rasterToOwin <- function(x) {
   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))

@@ -22,7 +22,7 @@ mesh_triangles <- function(x, triangles, grid = NULL, n = 128) {
   #           colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
   grid
 }
-.tri2quads <- quadmesh:::triangulate_quads
+.tri2quads <- 
 function(quad_index, clockwise = FALSE) {
   
   if (clockwise){

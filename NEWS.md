@@ -1,6 +1,6 @@
-# guerilla dev
+# guerilla 0.2.0
 
-* Test. 
+* Tiny release to bump the universe. 
 
 * New function `mesh_raster()` a generalization of `tri_fun()` now
 also works with 'mesh3d' input. 

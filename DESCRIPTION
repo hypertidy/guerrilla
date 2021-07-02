@@ -1,5 +1,5 @@
 Package: guerrilla
-Version: 0.1.0.9001
+Version: 0.2.0
 Title: Illustrate Various Methods of Interpolation for Irregular Data
 Authors@R: c(person("Michael", "Sumner", 
              email = "mdsumner@gmail.com", 
@@ -18,7 +18,6 @@ LazyData: true
 ByteCompile: true
 URL: https://github.com/hypertidy/guerrilla
 BugReports: https://github.com/hypertidy/guerrilla/issues
-RoxygenNote: 7.1.0
 Depends: R (>= 3.3.0)
 Imports: 
     raster,
@@ -28,7 +27,7 @@ Suggests:
     Rvcg,
     akima,
     knitr,
-    spatstat,
+    spatstat.geom,
     maptools,
     geometry (>= 0.4.0),
     viridis,
@@ -47,3 +46,4 @@ Suggests:
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Remotes: hypertidy/anglr
+RoxygenNote: 7.1.1
