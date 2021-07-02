@@ -35,11 +35,14 @@ tri_fun <- function(xy, value, grid = NULL, ...) {
   if (is.null(grid)) grid <- defaultgrid(xy)
   tri <- geometry::delaunayn(xy); 
   rxy <- sp::coordinates(grid)
+  # this is calculating barycentric weights for a grid of points (rxy - grid but can be arbitrary) 
+  # across a triangle mesh
   pid0 <- geometry::tsearch(xy[,1], xy[,2], tri, rxy[,1], rxy[, 2],
                             bary = TRUE)
   ok <- !is.na(pid0$idx)
   ## because min() is giving warnings, check raster
   suppressWarnings( grid <- raster::setValues(grid, NA_real_))
+  # then calculating the weighted interpolated value for each, and then updating the grid structure's values
   grid[ok] <- colSums(matrix(value[t(tri[pid0$idx[ok], ])], nrow = 3) * t(pid0$p)[, ok])
   grid
 }
