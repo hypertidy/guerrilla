@@ -13,9 +13,11 @@ knitr::opts_chunk$set(
 
 
 
-  [![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) [![Travis-CI Build Status](http://badges.herokuapp.com/travis/hypertidy/guerrilla?branch=master&env=BUILD_NAME=trusty_release&label=linux)](https://travis-ci.org/hypertidy/guerrilla)
-[![Build Status](http://badges.herokuapp.com/travis/hypertidy/guerrilla?branch=master&env=BUILD_NAME=osx_release&label=osx)](https://travis-ci.org/hypertidy/guerrilla)[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/hypertidy/guerrilla?branch=master&svg=true)](https://ci.appveyor.com/project/hypertidy/guerrilla)[![](http://www.r-pkg.org/badges/version/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/guerrilla)](http://www.r-pkg.org/pkg/guerrilla)[![Coverage Status](https://img.shields.io/codecov/c/github/hypertidy/guerrilla/master.svg)](https://codecov.io/github/hypertidy/guerrilla?branch=master)
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/hypertidy/guerrilla/workflows/R-CMD-check/badge.svg)](https://github.com/hypertidy/guerrilla/actions)
+[![lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing) 
+<!-- badges: end -->
 
 # guerrilla
 
