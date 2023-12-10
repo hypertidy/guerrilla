@@ -89,7 +89,7 @@ What about Delaunay?
 ```{r}
 ## input must be ppp
 library(spatstat)
-library(maptools)
+
 rasterToOwin <- function(x) {
   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
 }

@@ -142,7 +142,7 @@ What about Delaunay and Dirichlet without interpolation?
 graphics.off()
 ## input must be ppp
 library(spatstat.geom)
-library(maptools)
+
 rasterToOwin <- function(x) {
   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
 }
@@ -342,7 +342,7 @@ So now.
 # 
 # ## input must be ppp
 # library(spatstat)
-# library(maptools)
+
 # rasterToOwin <- function(x) {
 #   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
 # }

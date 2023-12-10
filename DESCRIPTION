@@ -28,7 +28,6 @@ Suggests:
     akima,
     knitr,
     spatstat.geom,
-    maptools,
     geometry (>= 0.4.0),
     viridis,
     rmarkdown,

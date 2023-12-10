@@ -1,3 +1,7 @@
+# guerrilla dev
+
+* Remove maptools
+
 # guerilla 0.2.0
 
 * Tiny release to bump the universe. 
