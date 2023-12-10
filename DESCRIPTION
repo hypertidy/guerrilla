@@ -1,5 +1,5 @@
 Package: guerrilla
-Version: 0.2.0
+Version: 0.2.0.9001
 Title: Illustrate Various Methods of Interpolation for Irregular Data
 Authors@R: c(person("Michael", "Sumner", 
              email = "mdsumner@gmail.com", 

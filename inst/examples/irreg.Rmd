@@ -25,7 +25,7 @@ library(akima)
 Define input data and read it in. We also reproject the longitude latitude values to a local equal area projection (in metres). 
 
 ```{r}
-dp <- "."
+dp <- here::here("inst/extdata")
 f <- "data_from_SAZSENSE_TM_20120209.txt"
 fp <- file.path(dp, f)
 ## read the data
@@ -88,7 +88,7 @@ points(d[, c(xname, yname)], cex = 0.2)
 What about Delaunay? 
 ```{r}
 ## input must be ppp
-library(spatstat)
+library(spatstat.geom)
 
 rasterToOwin <- function(x) {
   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
@@ -99,8 +99,9 @@ lltes<-delaunay(pObj)
 meanval <- numeric(length(lltes[[3]]))
   for (i in seq_along(meanval)) {
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-       }
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+  }
+sp_tes <-   sp::SpatialPolygons(lapply(seq_along(lltes$tiles), \(.x) sp::Polygons(list(sp::Polygon(matrix(unlist(lltes$tiles[[.x]]$bdry), ncol = 2)[c(1, 2, 3, 1), ])), .x)))
+plot(sp_tes, col = colfun(20)[scl(meanval)*19 + 1])
 points(d[,c(xname, yname)])
 
 ```
@@ -111,8 +112,11 @@ lltes<-dirichlet(pObj)
 meanval <- numeric(length(lltes[[3]]))
   for (i in seq_along(meanval)) {
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-       }
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
+  }
+
+sp_tes <-   sp::SpatialPolygons(lapply(seq_along(lltes$tiles), \(.x) sp::Polygons(list(sp::Polygon(matrix(unlist(lltes$tiles[[.x]]$bdry), ncol = 2)[c(1, 2, 3, 1), ])), .x)))
+
+plot(sp_tes, col = colfun(20)[scl(meanval)*19 + 1])
 points(d[,c(xname, yname)])
 
 ```
