@@ -16,7 +16,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
-URL: https://github.com/hypertidy/guerrilla
+URL: https://github.com/hypertidy/guerrilla, https://hypertidy.github.io/guerrilla/
 BugReports: https://github.com/hypertidy/guerrilla/issues
 Depends: R (>= 3.3.0)
 Imports: 
