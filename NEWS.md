@@ -1,5 +1,65 @@
 # guerrilla 0.3.0.9000
 
+## The methods are functions now, not closures in a vignette
+
+Six of the methods the vignette demonstrated existed only as closures inside
+it, each one wrapping its engine in `raster::interpolate()` and a bit of
+coercion. They are exported functions with the same signature as everything
+else: coordinates, values, a grid.
+
+* New `grid_bin()`, `grid_tps()`, `grid_idw()`, `grid_kriging()`, `grid_gam()`
+and `grid_smooth()`. Each takes `(x, value, grid)` and returns a grid, and each
+one is guarded on the Suggests it needs with an error that names the package.
+
+* `grid_tps()`, `grid_kriging()` and `grid_gam()` take
+`statistic = "se"` and return the standard error surface on the same grid. This
+is the thing most of these methods can say and none of them were saying. The
+error surface next to the prediction is the whole argument for preferring a
+method that fits a model over a method that applies a rule, and it looks
+strikingly like `grid_bin(fun = length)`.
+
+* `grid_idw()` has no `statistic`, on purpose. Inverse distance weighting is a
+rule rather than a model, so there is nothing to be uncertain with, and `idp`
+is chosen rather than estimated. That is the point of having it next to
+`grid_kriging()`.
+
+* `grid_kriging()` stops when the variogram fit comes back with a negative
+range, which means the values have no spatial structure at these distances. It
+is the only method here that can refuse; every other one will interpolate pure
+noise and hand you a picture of it.
+
+* `grid_gam()` takes a `formula`, defaulting to `value ~ s(x, y)` -- one
+isotropic 2-D smooth, which is a thin plate regression spline, which is
+`grid_tps()` with fewer basis functions. The vignette shows `value ~ s(x) +
+s(y)` beside it, because additive in x and y cannot put a feature in one place.
+
+* `grid_bin()` is the honest baseline and answers the question the others
+answer silently: `fun` decides what happens when two points land in one cell.
+`fun = length` gives the count grid, which is the most useful picture in the
+vignette. It is `vaster::cell_from_xy()` and `tapply()`, and no more.
+
+## No sp, and no raster in the middle of anything
+
+**gstat** takes plain data frames with the coordinates given as a formula
+(`locations = ~ x + y`), and **fields** and **mgcv** predict at a matrix of
+coordinates. So none of these methods needs a spatial class: the statistical
+engines never wanted one, they wanted coordinates and a `predict` method. The
+conversion functions are still there for handing a result to another package,
+but nothing in this package's own path goes through them any more.
+
+`sp` leaves Suggests, along with `stars`, `dplyr` and `viridis`, which nothing
+had used for some time.
+
+## Vignette
+
+Rewritten again, onto the exported functions. The closures are gone, each
+section is now a call and an explanation of what the call assumed, and it ends
+with all eight surfaces on one page -- which mostly shows that they agree where
+there is data and disagree where there is not.
+
+Removed about 130 lines of commented-out code at the end, which used sp,
+maptools and spatstat interfaces that no longer exist.
+
 ## Interpolation has a name, and the weights are visible
 
 `tri_fun()` said what it was implemented with. The methods are now named for

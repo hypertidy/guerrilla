@@ -29,14 +29,11 @@ Suggests:
     anglr,
     Rvcg,
     interp,
-    sp,
     raster,
     terra,
     gdalraster,
-    stars,
     knitr,
     spatstat.geom,
-    viridis,
     rmarkdown,
     fields,
     gstat,
@@ -46,7 +43,6 @@ Suggests:
     covr,
     testthat,
     mgcv,
-    dplyr,
     maps,
     rgl
 VignetteBuilder: knitr

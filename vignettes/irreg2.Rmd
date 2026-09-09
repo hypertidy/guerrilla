@@ -28,12 +28,11 @@ Define utility functions for repeated usage, and load required packages.
 
 ```{r}
 library(guerrilla)
-library(raster)
-library(gstat)
-library(fields)
-library(interp)
 library(palr)
 ```
+
+Everything else is loaded where it is used, so it is visible which method needs
+which package.
 
 Read the zooplankton data. 
 
@@ -43,13 +42,13 @@ bw <- read_excel(system.file("extdata", "BW-Zooplankton_env.xls", package= "guer
 summary(bw[,1:10])
 lonlat <- as.matrix(bw[, c("Lon", "Lat")])
 val <- bw$temp
-minmax <- c(-1.8, 40)
+```
 
-rval <- pretty(val, n = 15)
+The values are sea surface temperatures, so the plots use a palette meant for
+them, from \pkg{palr}:
 
-cols <- sst_pal(length(rval) - 1)
-
-
+```{r}
+cols <- sst_pal(24)
 ```
 
 Plot the temperature data. 
@@ -92,55 +91,95 @@ head(grid_xy(r0), 3)
 
 
 
-# Simplistic rasterization
+# Binning
 
-The most simple thing possible is to define a grid and populate that with values from points. 
-
-
-
-Note that `grid_spec()` covers the exact extent of the input points, so the
-outermost samples land on the boundary of the grid. Pad the extent when you want
-a margin: `grid_spec(xy, pad = 0.05)` grows it by 5% in each direction.
+The simplest thing possible is to define a grid and drop the points into it.
 
 ```{r}
-library(raster)
-rasgrid <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- grid_spec(xy)
-  ## raster::rasterize() wants a raster, so convert at the boundary
-  rasterize(xy, as_raster(grid), field = value, ...)
-}
-lastgrid <- rasgrid(lonlat, val, r0)
-
-plot(lastgrid)
+bingrid <- grid_bin(lonlat, val, r0)
+plot(bingrid, col = cols)
+points(lonlat, pch = 16, cex = 0.3)
 ```
 
-The main influence on the result here is purely pixel size, and we must consider the behaviour used when there is more than one value per pixel.  
+Nothing is estimated between the points: a cell with no point in it stays `NA`,
+which is most of them. The whole of `grid_bin()` is `vaster::cell_from_xy()`
+and `tapply()`, and it is worth having because of the question it forces, which
+every other method on this page answers without telling you.
 
-# Thin plate spline interpolation. 
+## What happens when two points land in one cell
 
-This is the powerhouse behind GDAL's raster warping, and that suggests that we
-could leverage GDAL by creating a data set in the right format for it to warp
-to.
-
+`fun` is that answer, written down.
 
 ```{r}
-library(fields)
-tpsfun <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- grid_spec(xy)
-  r <- as_raster(grid)
-  model <- Tps(xy, value, lon.lat = isLonLat(r), method = "REML")
-  interpolate(r, model, ...)
-}
-tpsgrid  <- tpsfun(lonlat, val)
-tpsgrid <- clamp(tpsgrid, minmax[1], minmax[2])
-
-## this shows the error
-tpsSEgrid <- tpsfun(lonlat, val, r0, fun = predictSE)
-
-plot(tpsgrid, asp = "")
+counts <- grid_bin(lonlat, val, r0, fun = length)
+plot(counts)
+range(counts$values, na.rm = TRUE)
 ```
 
+The transect was sampled along a line, so cells on the line hold several
+measurements and cells off it hold none. `fun = mean` averages them,
+`fun = length` counts them, `fun = function(x) x[1]` keeps whichever came first
+in the file. The last one is what a lot of software does by default.
 
+That count grid is the most useful picture in this vignette. Every surface
+below fills the whole extent, and every one of them is inventing the parts of
+it where this grid is `NA`.
+
+```{r}
+plot(grid_bin(lonlat, val, grid_spec(lonlat, dimension = c(15, 12))))
+points(lonlat, pch = 16, cex = 0.3)
+```
+
+Coarser cells fill more of the grid and say less about any of it. There is no
+resolution that fixes this, which is the reason to interpolate.
+
+# Thin plate splines
+
+The surface that passes near the data while bending as little as possible. This
+is the engine behind GDAL's `-tps` warping, so it is also what happens when you
+georeference an image from ground control points.
+
+```{r}
+tpsgrid <- grid_tps(lonlat, val, r0)
+plot(tpsgrid, col = cols)
+points(lonlat, pch = 16, cex = 0.3)
+```
+
+It filled the whole grid, including the corners, where there is no data within
+several degrees. That is not a bug and it is not a secret either, because the
+same fit will say how sure it is:
+
+```{r}
+plot(grid_tps(lonlat, val, r0, statistic = "se"))
+points(lonlat, pch = 16, cex = 0.3)
+```
+
+The two pictures belong together. The first says what the method thinks and the
+second says where it is guessing, and the second one looks a great deal like the
+count grid from the previous section.
+
+Read the warning rather than ignoring it. `fields` searched for a smoothing
+parameter, found the minimum at the end of its range, and reports 47.5
+effective degrees of freedom for 50 data points. That is a spline passing
+through the data rather than smoothing it: with fifty points along one transect
+there is nothing to average over, so cross validation says do not average.
+`method = "REML"` picks the smoothing parameter a different way and is worth
+comparing.
+
+```{r}
+plot(grid_tps(lonlat, val, r0, method = "REML"), col = cols)
+```
+
+`lon.lat` is the one place in this package where what the coordinates mean
+changes the arithmetic: a spline bends in the plane of its coordinates, and a
+degree of longitude is not a degree of latitude anywhere but the equator. It is
+not read off the `crs`, because the guess would be wrong exactly when it
+mattered.
+
+```{r}
+lltps <- grid_tps(lonlat, val, r0, lon.lat = TRUE)
+plot(lltps, col = cols)
+```
 
 # Bilinear triangulation
 
@@ -248,90 +287,100 @@ single value across the tile. It was nearest neighbour, computed by running a
 linear model per tile in an R loop. `grid_voronoi()` above is the same numbers
 under an honest name.
 
-# IDW
+# Inverse distance weighting
+
+A weighted average of the input values, weighted by one over distance to a
+power. There is no model here, only a rule.
 
 ```{r}
-library(gstat)
-idwfun <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- grid_spec(xy)
-  r <- as_raster(grid)
-  d <- data.frame(lon = xy[,1], lat = xy[,2], value = value)
-  coordinates(d) <- ~lon+lat
-  proj4string(d) <- proj4string(r)
-  ## inverse distance weighted (IDW)
-  mg <- gstat(id = "value", formula = value~1, locations = c("lon", "lat"), data = d, ...) 
-  interpolate(r, mg)          
-}
-
-
-dw <- idwfun(lonlat, val, r0)
-dw <- idwfun(lonlat, val, r0, set = list(idp = 1.5))
-plot(dw); contour(as_raster(trigrid), add = TRUE)
-
-
+op <- par(mfrow = c(2, 1), mar = c(2, 2, 2, 1))
+plot(grid_idw(lonlat, val, r0, idp = 0.5), main = "idp = 0.5")
+plot(grid_idw(lonlat, val, r0, idp = 8), main = "idp = 8")
+par(op)
 ```
+
+`idp` is the whole method. Raise it and the nearest point dominates, so the
+surface tends towards `grid_voronoi()`; lower it and everything flattens
+towards the overall mean. Neither end is more correct than the other and
+nothing in the data tells you where to sit between them, which is why the
+default of 2 is a convention rather than an answer.
+
+The consequence is that this method cannot report a standard error. It never
+claimed to be estimating anything, so there is nothing to be uncertain with.
 
 # Kriging
 
-```{r}
-
-krifun <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- grid_spec(xy)
-  r <- as_raster(grid)
-  d <- data.frame(lon = xy[,1], lat = xy[,2], value = value)
-  coordinates(d) <- ~lon+lat
-  proj4string(d) <- proj4string(r)
- v <- variogram(value~1, d)
- m <- fit.variogram(v, vgm(1, "Sph", 150, 1))
- gOK <- gstat(NULL, "value", value~1, d, model=m)
- interpolate(r, gOK)
-
-}
-krigrid <- krifun(lonlat, val, grid = r0)
-plot(krigrid)
-
-```
-
-# GAM
-
-This needs work, mgcv has more promise than this shows ;)
-
-
+The same idea taken seriously. The variogram is a picture of how much two
+values differ as a function of how far apart they are; kriging fits a curve to
+that picture and uses the curve to choose the weights.
 
 ```{r}
-library(mgcv)
-gamfit <- gam(temp ~ s(Lon) + s(Lat), data = bw, family = gaussian, method = "REML")
-g <- grid_spec(lonlat, dimension = c(50, 50))
-gxy <- grid_xy(g)
-g$values <- c(predict(gamfit, data.frame(Lon = gxy[, 1], Lat = gxy[, 2])))
-plot(g)
+krigrid <- grid_kriging(lonlat, val, r0)
+plot(krigrid, col = cols)
 ```
 
-# fields
+Because the weights come from a fitted model, there is a variance to go with
+them:
 
 ```{r}
-# out <- as.image(d[,varname], x = d[,c(xname, yname)], nx = 25, ny = 25)
-# plot(raster(out))
-# look<- image.smooth( out, theta= 2.5) 
-# plot(raster(look))
-
-fsmfun <- function(xy, value, grid = NULL) {
-  if (is.null(grid)) grid <- grid_spec(xy)
-  ## as.image() wants a square grid
-  n <- max(grid$dimension)
-  out <- as.image(value, x = xy, nx = n, ny = n)
-  sm <- image.smooth(out, theta = 2.5)
-  ## image.smooth() returns x, y, z with both axes increasing and z[x, y];
-  ## a guerrilla grid runs top-down, so flip back
-  g <- grid_spec(dimension = c(n, n), extent = grid$extent, crs = grid$crs)
-  g$values <- as.vector(sm$z[, rev(seq_len(ncol(sm$z)))])
-  g
-}
-
-fsmgrid <- fsmfun(lonlat, val, r0)
-plot(fsmgrid)
-
+plot(grid_kriging(lonlat, val, r0, statistic = "se"))
+points(lonlat, pch = 16, cex = 0.3)
 ```
+
+That surface is usually more informative than the prediction, and it is the
+reason to reach for this method rather than IDW.
+
+It is also the only method here that can refuse. Give it values with no spatial
+structure and there is no curve to fit, the fit comes back with a negative
+range, and it stops:
+
+```{r, error = TRUE}
+set.seed(9)
+noise <- cbind(runif(120), runif(120))
+grid_kriging(noise, rnorm(120))
+```
+
+Every other method on this page will interpolate pure noise without complaint
+and hand you a picture of it.
+
+# Generalized additive models
+
+```{r}
+plot(grid_gam(lonlat, val, r0), col = cols)
+```
+
+The default formula is `value ~ s(x, y)`, one isotropic two dimensional smooth.
+`mgcv`'s default basis for a two dimensional `s()` is a thin plate regression
+spline, so this is the thin plate spline from earlier with fewer basis
+functions and the smoothing parameter chosen by REML. On this data the two are
+hard to tell apart, which is the point.
+
+The wrong model is instructive too:
+
+```{r}
+op <- par(mfrow = c(2, 1), mar = c(2, 2, 2, 1))
+plot(grid_gam(lonlat, val, r0), main = "s(x, y)")
+plot(grid_gam(lonlat, val, r0, formula = value ~ s(x) + s(y)),
+     main = "s(x) + s(y)")
+par(op)
+```
+
+Additive in x and y means every column of the grid has the same shape as every
+other column, up to a shift. It cannot represent a feature that sits in one
+place, so it smears anything local into a cross.
+
+# Kernel smoothing
+
+Bin first, estimate second.
+
+```{r}
+plot(grid_smooth(lonlat, val, r0, theta = 1), col = cols)
+```
+
+Everything else here works from the points; this one goes through a grid on the
+way. The binning throws away where inside its cell each point was, and no
+amount of smoothing afterwards gets that back. `theta` is the kernel bandwidth,
+in the units of the coordinates, and it does all the work.
 
 # Akima (via the interp package)
 
@@ -361,146 +410,31 @@ ok <- !is.na(akigrid$values) & !is.na(trigrid$values)
 max(abs(akigrid$values[ok] - trigrid$values[ok]))
 ```
 
-# Others
+# What the pictures have in common
 
+Eight methods, one grid, one set of points.
 
-Hexagons: see hexbin, spatstat. 
-
-
-sm package
-
-
-
-# Along-track distance
-Previously we used Latitude as our x-axis, this is not very sensible since the track visits the same latitudes at different longitudes. As a simple improvement let's build an along-track axis. 
-
-```{r,eval=FALSE}
-# lonname <- "Longitude [degrees_east]"
-# latname <- "Latitude [degrees_north]"
-# tname <- "yyyy-mm-ddThh:mm:ss.sss"
-# d2 <- szt[asub, c(xname, yname, lonname, latname, varname, tname)]
-# d2$date <- as.POSIXct(d2[[tname]])
-# d2 <- d2[order(d2$date, d2$Depth), ]
-# library(geosphere)
-# dists <- numeric(nrow(d2)-1)
-# for (i in seq_along(dists)) {
-#   dists[i] <- spDistsN1(as.matrix(d2[i, c(lonname, latname)]), as.matrix(d2[i+1, c(lonname, latname), drop = FALSE]), longlat = TRUE)
-#   }
-# d2$dist <- cumsum(c(0, dists))
+```{r, fig.height = 10}
+op <- par(mfrow = c(4, 2), mar = c(2, 2, 2, 1))
+plot(bingrid, main = "grid_bin")
+plot(grid_voronoi(lonlat, val, r0), main = "grid_voronoi")
+plot(trigrid, main = "grid_barycentric")
+plot(akigrid, main = "interp::interp")
+plot(tpsgrid, main = "grid_tps")
+plot(krigrid, main = "grid_kriging")
+plot(grid_idw(lonlat, val, r0), main = "grid_idw")
+plot(grid_gam(lonlat, val, r0), main = "grid_gam")
+par(op)
 ```
 
+They disagree most where there is no data, and that is the only place the
+choice between them matters much. Near the transect they all say roughly what
+the measurements say, because there is nothing else for them to say.
 
-So now. 
+Two of them fill only the convex hull and leave the rest `NA`. Four fill the
+whole extent from a fitted model, and three of those will tell you how sure
+they are if asked. One fills the whole extent from a rule and cannot.
 
-```{r}
-# xname <- "dist"
-# d <- d2
-# ex <- extent(range(d[, xname]), range(d[, yname])) * 1.2
-# rbase <- raster(ex, ncols = 25, nrows = 25)
-# rlast <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname])
-# 
-# rmean <- rasterize(d[,c(xname, yname)], rbase, field = d[,varname], fun = mean)
-# 
-# rval <- pretty(d[,varname], n = 15)
-# 
-# plot(rlast, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
-# points(d[, c(xname, yname)], cex = 0.2)
-#  plot(rmean, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
-# points(d[, c(xname, yname)], cex = 0.2)
-# 
-# 
-# p <- Tps(d[, c(xname, yname)], d[,varname])
-# rp <- interpolate(rbase, p)
-# rpse <- interpolate(rbase, p, fun = predictSE)
-#  plot(rp, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
-# points(d[, c(xname, yname)], cex = 0.2)
-#  plot(rpse, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
-# points(d[, c(xname, yname)], cex = 0.2)
-# 
-# 
-# ## input must be ppp
-# library(spatstat)
-
-# rasterToOwin <- function(x) {
-#   owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
-# }
-# pObj <- ppp(d[,xname], d[,yname], window = rasterToOwin(rbase), marks = d[, varname])
-# 
-# lltes<-delaunay(pObj)
-# meanval <- numeric(length(lltes[[3]]))
-#   for (i in seq_along(meanval)) {
-#   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-#        }
-# plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
-# points(d[,c(xname, yname)])
-# 
-# 
-# lltes<-dirichlet(pObj)
-# meanval <- numeric(length(lltes[[3]]))
-#   for (i in seq_along(meanval)) {
-#   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-#        }
-# plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1])
-# points(d[,c(xname, yname)])
-# 
-# 
-# source("maybetin.R")
-# 
-# fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
-# plot(rasterFromXYZ(as.data.frame(fcs.dir)))
-# fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
-# plot(rasterFromXYZ(as.data.frame(fcs.del)))
-# 
-# library(gstat)
-# 
-# dsp <- d
-# coordinates(dsp) <- c(xname, yname)
-# ## inverse distance weighted (IDW)
-# mg <- gstat(id = "Al", formula = Al~1, locations = c(xname, yname), data=dsp, 
-#             nmax=7, set=list(idp = .5))
-# z <- interpolate(rbase, mg)
-# plot(z)
-# 
-# ## with log
-# v <- variogram(log(Al)~1, dsp)
-# m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
-# gOK <- gstat(NULL, "logAl", log(Al)~1, dsp, model=m)
-# OK <- interpolate(rbase, gOK)
-# plot(OK)
-# 
-# ## without log
-# v <- variogram(Al~1, dsp)
-# m <- fit.variogram(v, vgm(1, "Sph", 300, 1))
-# gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
-# OK <- interpolate(rbase, gOK)
-# plot(OK)
-# 
-# 
-# ## Gaussian
-# v <- variogram(Al~1, dsp)
-# m <- fit.variogram(v, vgm(1, "Gau", 300, 1))
-# gOK <- gstat(NULL, "Al", Al~1, dsp, model=m)
-# OK <- interpolate(rbase, gOK)
-# plot(OK)
-# 
-# out <- as.image(d[,varname], x = d[,c(xname, yname)], nx = 25, ny = 25)
-# plot(raster(out))
-# look<- image.smooth( out, theta= 2.5) 
-# plot(raster(look))
-# 
-# 
-# library(akima)
-# 
-# x0 <- xFromCol(rbase)
-# y0 <- yFromRow(rbase)
-# 
-# aklin <- interp(d[,xname], d[,yname], d[,varname], 
-#               x0, y0)
-# # aksplin <-interp(d[,xname], d[,yname], d[,varname], 
-# #               x0, y0, linear = FALSE, extrap = TRUE) 
-# rlin <- raster(list(x = aklin$x, y = rev(aklin$y), z = t(aklin$z[,ncol(aklin$z):1])))
-# ##rsplin <- raster(aksplin)
-# plot(rlin, col = colfun(length(rval) - 1), breaks = rval, asp = 1)
-#points(d[, c(xname, yname)], cex = 0.2)
-```
-
+There is no method here that is right. There is a method that makes its
+assumptions visible and a method that does not, and the difference is worth
+more than the surfaces.
