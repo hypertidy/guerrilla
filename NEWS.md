@@ -1,5 +1,46 @@
 # guerrilla 0.3.0.9000
 
+## Four articles instead of one long one
+
+`irreg2.Rmd` was the whole package's documentation, and it had grown to cover
+what a grid is, how barycentric coordinates work, eight interpolation methods,
+and what happens when you project the coordinates. Those are four things.
+
+* `vignette("interpolating")` is the tour: the eight methods on one dataset with
+one grid, so the pictures can be compared, ending with all of them on one page.
+It is the renamed `irreg2`, which is a name that told a reader nothing.
+
+* `vignette("grids")` is what a grid is: four elements, where the cells are, why
+the cell size is not stored, and the converters to \pkg{raster}, \pkg{terra}
+and \pkg{gdalraster}.
+
+* `vignette("triangulation")` is the Delaunay and Voronoi tessellations drawn
+side by side, `bary_weights()` worked through, the readable R engine checking
+the C one, `find_triangle()` on its own, the `facets()` story, and the `mesh3d`
+case.
+
+* `vignette("projection")` is from the previous release.
+
+New `_pkgdown.yml` groups the reference index by what things are for, with the
+superseded functions in their own section rather than mixed in with the rest.
+
+## README
+
+Rewritten around a worked example and two figures: the same points interpolated
+two ways, and then a prediction next to its standard error. It says what the
+package is for in the first two lines, which the old one did not.
+
+## Deprecations, finished
+
+`defaultgrid()` and `tri_fun()` warn and forward to `grid_spec()` and
+`grid_barycentric()`. `facets()` is superseded without a warning, since it still
+does what it always did and its help page now explains what that was. All three
+are grouped as superseded on the reference index.
+
+`as_gdalraster()` documents that it returns the open `GDALRaster`, not a file
+name, and that the caller closes it. It always did; the help page did not say
+so, and the new grids article found that out the hard way.
+
 ## Coordinates of any magnitude, and a bug that had been waiting
 
 `geometry::tsearch()` builds a quadtree over the input points, and on some

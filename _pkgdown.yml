@@ -1,0 +1,77 @@
+url: https://hypertidy.github.io/guerrilla/
+
+template:
+  bootstrap: 5
+
+reference:
+- title: The grid
+  desc: >
+    A grid is a list of four things: dimension, extent, crs, values. These make
+    one, ask it questions, and hand it to another package.
+  contents:
+  - grid_spec
+  - grid_xy
+  - grid_ncell
+  - grid_res
+  - is_grid
+  - as_grid
+  - converters
+  - plot.guerrilla_grid
+  - as.matrix.guerrilla_grid
+  - as.data.frame.guerrilla_grid
+
+- title: Interpolation
+  desc: >
+    Every one of these takes coordinates, values and a grid, and returns a grid.
+    They differ in what they assume, and the documentation says what.
+  contents:
+  - grid_bin
+  - grid_voronoi
+  - grid_barycentric
+  - grid_idw
+  - grid_tps
+  - grid_kriging
+  - grid_gam
+  - grid_smooth
+  - grid_gdal
+  - mesh_raster
+
+- title: The arithmetic, in the open
+  desc: >
+    The parts other packages keep in C. These exist to be read, and to check
+    that the fast paths compute what they claim to.
+  contents:
+  - bary_weights
+  - find_triangle
+  - grid_facet_lm
+
+- title: Input
+  contents:
+  - xyz_input
+  - collapse_duplicates
+
+- title: Data
+  contents:
+  - bathy
+
+- title: The package
+  contents:
+  - guerrilla-package
+
+- title: Superseded
+  desc: >
+    Kept so old code runs. Each one's help page says what to use instead and
+    why.
+  contents:
+  - tri_fun
+  - defaultgrid
+  - facets
+
+articles:
+- title: Articles
+  navbar: ~
+  contents:
+  - interpolating
+  - grids
+  - triangulation
+  - projection

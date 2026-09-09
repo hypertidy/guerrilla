@@ -74,11 +74,14 @@ plot.guerrilla_grid <- function(x, col = grDevices::hcl.colors(24, "YlGnBu"),
 #' same order.
 #'
 #' `as_gdalraster()` has to write a file, since that is how GDAL works; by
-#' default it writes to GDAL's in-memory filesystem.
+#' default it writes to GDAL's in-memory filesystem. It returns the open
+#' `GDALRaster` object, not the file name, and the caller has to `$close()` it.
+#' The file name is `$getFilename()` on the returned object.
 #'
 #' @param grid a `guerrilla_grid`
 #' @param filename file to write; defaults to a path in GDAL's `/vsimem`
-#' @return An object of the corresponding class.
+#' @return An object of the corresponding class: a `RasterLayer`, a
+#'   `SpatRaster`, or an open `GDALRaster`.
 #' @name converters
 #' @examples
 #' xy <- cbind(runif(50), runif(50))

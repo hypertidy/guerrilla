@@ -19,7 +19,8 @@ as_gdalraster(grid, filename = NULL)
 \item{filename}{file to write; defaults to a path in GDAL's \verb{/vsimem}}
 }
 \value{
-An object of the corresponding class.
+An object of the corresponding class: a \code{RasterLayer}, a
+\code{SpatRaster}, or an open \code{GDALRaster}.
 }
 \description{
 Converters to the raster classes people actually have installed. Each one is
@@ -29,7 +30,9 @@ same order.
 }
 \details{
 \code{as_gdalraster()} has to write a file, since that is how GDAL works; by
-default it writes to GDAL's in-memory filesystem.
+default it writes to GDAL's in-memory filesystem. It returns the open
+\code{GDALRaster} object, not the file name, and the caller has to \verb{$close()} it.
+The file name is \verb{$getFilename()} on the returned object.
 }
 \examples{
 xy <- cbind(runif(50), runif(50))

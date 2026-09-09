@@ -22,9 +22,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Setup
+This is the tour: eight ways to turn scattered measurements into a full grid,
+on one set of points, with one grid, so the pictures can be put side by side.
 
-Define utility functions for repeated usage, and load required packages. 
+Three other articles go deeper on one thing each. `vignette("grids")` is what a
+grid is and how to hand one to another package. `vignette("triangulation")` is
+the Delaunay and Voronoi tessellations and the arithmetic behind them.
+`vignette("projection")` is what changes when the coordinates change, and how
+this all lines up with GDAL.
+
+# Setup
 
 ```{r}
 library(guerrilla)
@@ -65,31 +72,14 @@ r0 <- grid_spec(lonlat, crs = "EPSG:4326")
 r0
 ```
 
-A grid in this package is a list, and that is the whole of it:
+A grid here is a list of four things and nothing else, and cell centres come
+from `grid_xy()`. That is all the interpolation code below knows about grids;
+`vignette("grids")` is the whole story if you want it.
 
 ```{r}
 str(unclass(r0))
-```
-
-`dimension` is how many cells across and down, `extent` is the region covered,
-`crs` is what the coordinates mean -- here they really are longitude and
-latitude, so we said so. There is no fourth secret thing. Every raster class in
-R is a container for these same few numbers plus a vector of values, which is
-why a plain list is enough to interpolate onto and why converting to any of
-those classes is a few lines:
-
-```{r}
-as_raster(r0)
-```
-
-Cell centres come from `grid_xy()`, and that single function is all the
-interpolation code below needs to know about grids:
-
-```{r}
 head(grid_xy(r0), 3)
 ```
-
-
 
 # Binning
 
@@ -183,109 +173,45 @@ plot(lltps, col = cols)
 
 # Bilinear triangulation
 
-This is identical to Matlab's `griddata(, method = "bilinear")`, and to GDAL's
-`gdal_grid -a linear`. Triangulate the points, and inside each triangle put the
-plane through its three corner values.
+Triangulate the points, and inside each triangle put the plane through its three
+corner values. This is what MATLAB calls `griddata(method = "linear")` and GDAL
+calls `gdal_grid -a linear`.
 
 ```{r}
 trigrid <- grid_barycentric(lonlat, val, r0)
-trigrid
-
-## should be identical, generalizing for mesh3d use
-t2 <- mesh_raster(cbind(lonlat, val), r0)
-stopifnot(identical(trigrid$values, t2$values))
-
 plot(trigrid)
+points(lonlat, pch = 16, cex = 0.3)
 ```
 
-## Where the weights come from
+It passes exactly through the data and invents nothing beyond it, so cells
+outside the convex hull stay `NA`. That is the honest end of the range: no
+answer where there is no basis for one.
 
-`grid_barycentric()` gets its answer from one call to `geometry::tsearch()`,
-which finds the containing triangle for every cell and its barycentric weights
-in a single pass of C. That is the right way to compute it and the wrong way to
-learn it, so the same thing is also written out in R.
-
-For a point inside a triangle, the barycentric weights say how much of each
-corner the point is made of. They sum to one, and they are all non-negative
-exactly when the point is inside -- so the same three numbers are both a
-point-in-triangle test and the interpolation rule.
+The arithmetic is barycentric coordinates, which are three numbers that are
+both the point-in-triangle test and the interpolation rule at once:
 
 ```{r}
-tri <- cbind(c(0, 1, 0), c(0, 0, 1))
-bary_weights(tri, rbind(c(0.25, 0.25), c(1/3, 1/3), c(1, 1)))
+bary_weights(cbind(c(0, 1, 0), c(0, 0, 1)),
+             rbind(c(0.25, 0.25), c(1/3, 1/3), c(1, 1)))
 ```
 
-The first point is a quarter of the way in from two corners, the second is the
-centroid, and the third is outside -- which shows up as a negative weight
-rather than as a separate test.
+The third point is outside the triangle, which shows as a negative weight rather
+than as a separate test. `vignette("triangulation")` goes through this properly,
+along with the Delaunay and Voronoi tessellations, the readable R engine, and
+what the old `facets()` was really computing.
 
-Interpolating is then the weighted sum of the corner values, and
-`engine = "R"` does the whole job that way: `find_triangle()` to locate each
-cell, `bary_weights()` to weight it. It is much slower, and it agrees with the
-C to floating point.
-
-```{r}
-slow <- grid_barycentric(lonlat, val, r0, engine = "R")
-ok <- !is.na(slow$values)
-max(abs(slow$values[ok] - trigrid$values[ok]))
-```
-
-# Delaunay and Voronoi
-
-The tessellations themselves, drawn. GEOS builds both.
-
-```{r}
-library(geos)
-pts <- as_geos_geometry(wk::xy(lonlat[, 1], lonlat[, 2]))
-coll <- geos_make_collection(pts)
-
-op <- par(mfrow = c(2, 1), mar = c(2, 2, 2, 1))
-plot(geos_unnest(geos_delaunay_triangles(coll), keep_multi = FALSE),
-     col = NA, border = "grey40", main = "Delaunay triangles")
-points(lonlat, pch = 16, cex = 0.4)
-plot(geos_unnest(geos_voronoi_polygons(coll), keep_multi = FALSE),
-     col = NA, border = "grey40", main = "Voronoi tiles")
-points(lonlat, pch = 16, cex = 0.4)
-par(op)
-```
-
-The two are duals of each other, and they answer different questions. A
-Delaunay triangle has three data points at its corners, so a value inside it
-can be a blend of three. A Voronoi tile has one data point in it and consists
-of everywhere closer to that point than to any other, so a value inside it can
-only be that one point's value.
-
-Which means the Voronoi tessellation *is* nearest neighbour:
+# Nearest neighbour
 
 ```{r}
 vor <- grid_voronoi(lonlat, val, r0)
 plot(vor)
 ```
 
-Note that it filled the whole grid, where `grid_barycentric()` left the corners
-`NA`. Voronoi tiles cover the plane, so nothing is ever outside them. That is
-convenient, and it is also this method's main way of lying to you: a cell far
-from any data still gets a confident answer.
-
-## The slow way round
-
-Fitting `value ~ x + y` inside each Delaunay triangle gives the same surface as
-barycentric interpolation, because three points determine a plane and least
-squares through exactly three points is that plane:
-
-```{r}
-lmgrid <- grid_facet_lm(lonlat, val, r0)
-both <- !is.na(lmgrid$values) & !is.na(trigrid$values)
-max(abs(lmgrid$values[both] - trigrid$values[both]))
-```
-
-This package used to offer that as `facets()`, along with a Dirichlet variant.
-The Dirichlet variant was not doing what it looked like it was doing: a Voronoi
-tile holds exactly one point, so the per-tile `lm(value ~ x + y)` had one
-observation and three parameters, fitted an intercept, and predicted that
-single value across the tile. It was nearest neighbour, computed by running a
-linear model per tile in an R loop. `grid_voronoi()` above is the same numbers
-under an honest name.
+A Voronoi tile is everywhere closer to its own point than to any other, so
+filling each tile with its point's value is nearest neighbour drawn rather than
+computed. Note that it filled the whole grid where triangulation left the
+corners `NA`. Tiles cover the plane, so nothing is ever outside them, and a cell
+far from any data still gets a confident answer.
 
 # Inverse distance weighting
 
@@ -417,7 +343,7 @@ Eight methods, one grid, one set of points.
 ```{r, fig.height = 10}
 op <- par(mfrow = c(4, 2), mar = c(2, 2, 2, 1))
 plot(bingrid, main = "grid_bin")
-plot(grid_voronoi(lonlat, val, r0), main = "grid_voronoi")
+plot(vor, main = "grid_voronoi")
 plot(trigrid, main = "grid_barycentric")
 plot(akigrid, main = "interp::interp")
 plot(tpsgrid, main = "grid_tps")
@@ -438,3 +364,12 @@ they are if asked. One fills the whole extent from a rule and cannot.
 There is no method here that is right. There is a method that makes its
 assumptions visible and a method that does not, and the difference is worth
 more than the surfaces.
+
+# Where to next
+
+* `vignette("grids")` -- what a grid is, and the converters to raster, terra
+  and gdalraster.
+* `vignette("triangulation")` -- barycentric weights spelled out, the two
+  tessellations drawn, and the readable engine that checks the fast one.
+* `vignette("projection")` -- the same data in two coordinate systems, GDAL's
+  own gridder, and thin plate splines as georeferencing.
