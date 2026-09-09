@@ -1,4 +1,4 @@
-# guerrilla 0.3.0.9000
+# guerrilla 0.4.0
 
 ## Four articles instead of one long one
 
