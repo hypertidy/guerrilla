@@ -1,6 +1,16 @@
 
 ##https://stat.ethz.ch/pipermail/r-sig-geo/2011-November/013525.html
-#' Title
+#' Interpolate by fitting a plane within each tessellation facet
+#'
+#' Tessellate a marked point pattern into Dirichlet (Voronoi) cells or Delaunay
+#' triangles, fit a linear trend in x and y to the marks falling within each
+#' facet, and predict that trend at a set of grid locations.
+#'
+#' This is deliberately the slow, explicit version of what [tri_fun()] does in
+#' one vectorised pass: every facet is visited in an R loop and gets its own
+#' `lm()` fit. It is here to show the mechanics, and because a per-facet plane
+#' fit is a genuinely different estimator from barycentric interpolation when a
+#' facet contains more than three points.
 #'
 #' @param X spatstat object
 #' @param nx number of x coords

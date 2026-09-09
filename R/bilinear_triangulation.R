@@ -1,21 +1,12 @@
-
-#' Identify point-in-triangle by conversion to polygons
-#' 
-#' This functio was used by an early version of `tri_fun`. 
-#' @param tri list P n*2 coordinates and T matrix of n*3 indices defining triangles
-#' @param pts input points
-#' @importFrom sp Polygon Polygons SpatialPolygons CRS proj4string over
-tri_pip <- function(tri, pts) {
-  ps <- lapply(split(tri$T, seq(nrow(tri$T))), function(x) Polygon(tri$P[c(x, x[1]), ]))
-  sp <- lapply(seq_along(ps), function(x) Polygons(ps[x], x))
-  spp <- SpatialPolygons(sp, proj4string = CRS(proj4string(pts)))
-  as.integer(sp::over(pts, spp))
-}
-
-
-
 #' Interpolation to a regular grid via triangulation
-#' 
+#'
+#' Triangulate the input coordinates and estimate a value at every cell of a
+#' target grid, using the barycentric coordinates of the cell centre within the
+#' triangle that contains it.
+#'
+#' Cells that fall outside the convex hull of `xy` have no containing triangle
+#' and are left as `NA`.
+#'
 #' @param xy coordinates
 #' @param value value to interpolate
 #' @param grid grid to use
@@ -28,13 +19,13 @@ tri_pip <- function(tri, pts) {
 #' r <- raster::setExtent(raster::raster(volcano), zero_extent)
 #' xy <- raster::sampleRandom(r, size = 150, xy = TRUE)[, 1:2, drop = FALSE]
 #' tri_est <- tri_fun(xy, raster::extract(r, xy))
-#' 
+#'
 #' grd <- raster::raster(raster::extent(xy) ,res = 0.1)
 #' tri_est2 <- tri_fun(xy, raster::extract(r, xy), grid = grd)
 tri_fun <- function(xy, value, grid = NULL, ...) {
   if (is.null(grid)) grid <- defaultgrid(xy)
   tri <- geometry::delaunayn(xy); 
-  rxy <- sp::coordinates(grid)
+  rxy <- raster::xyFromCell(grid, seq_len(raster::ncell(grid)))
   # this is calculating barycentric weights for a grid of points (rxy - grid but can be arbitrary) 
   # across a triangle mesh
   pid0 <- geometry::tsearch(xy[,1], xy[,2], tri, rxy[,1], rxy[, 2],

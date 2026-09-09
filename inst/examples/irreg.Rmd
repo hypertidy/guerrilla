@@ -26,7 +26,7 @@ Define input data and read it in. We also reproject the longitude latitude value
 
 ```{r}
 dp <- here::here("inst/extdata")
-f <- "data_from_SAZSENSE_TM_20120209.txt"
+f <- "data_from_SAZSENSE_TM_20120209.txt.gz"
 fp <- file.path(dp, f)
 ## read the data
 szt <- read.table(fp, comment.char = "/", sep = "\t", header = TRUE, check.names = FALSE)

@@ -32,7 +32,7 @@ library(guerrilla)
 library(raster)
 library(gstat)
 library(fields)
-library(akima)
+library(interp)
 library(palr)
 ```
 
@@ -64,7 +64,7 @@ Create a grid to interpolate onto, this can be used repeatedly for many methods.
 ```{r}
 library(raster)
 
-r0 <- defaultgrid(lonlat)
+r0 <- defaultgrid(lonlat, prj = "EPSG:4326")
 
 ```
 
@@ -76,7 +76,9 @@ The most simple thing possible is to define a grid and populate that with values
 
 
 
-We extend the grid by a small amount, which is generally good practice. 
+Note that `defaultgrid()` covers the exact extent of the input points, so the
+outermost samples land on the boundary of the grid. Padding the extent a little
+is generally good practice; do it explicitly when you want it.
 
 ```{r}
 rasgrid <- function(xy, value, grid = NULL, ...) {
@@ -265,10 +267,10 @@ plot(fsmgrid, asp = "")
 
 ```
 
-# Akima
+# Akima (via the interp package)
 
 ```{r}
-library(akima)
+library(interp)
 akifun <- function(xy, value, grid = NULL, ...) {
      if (is.null(grid)) grid <- defaultgrid(xy)
   x0 <- xFromCol(grid)

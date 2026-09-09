@@ -19,7 +19,13 @@ tri_fun(xy, value, grid = NULL, ...)
 raster
 }
 \description{
-Interpolation to a regular grid via triangulation
+Triangulate the input coordinates and estimate a value at every cell of a
+target grid, using the barycentric coordinates of the cell centre within the
+triangle that contains it.
+}
+\details{
+Cells that fall outside the convex hull of \code{xy} have no containing triangle
+and are left as \code{NA}.
 }
 \examples{
 zero_extent <- raster::extent(0, ncol(volcano), 0, nrow(volcano))

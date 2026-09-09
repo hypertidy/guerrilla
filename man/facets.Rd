@@ -2,7 +2,7 @@
 % Please edit documentation in R/maybetin.R
 \name{facets}
 \alias{facets}
-\title{Title}
+\title{Interpolate by fitting a plane within each tessellation facet}
 \usage{
 facets(
   X,
@@ -33,5 +33,14 @@ facets(
 ppp object
 }
 \description{
-Title
+Tessellate a marked point pattern into Dirichlet (Voronoi) cells or Delaunay
+triangles, fit a linear trend in x and y to the marks falling within each
+facet, and predict that trend at a set of grid locations.
+}
+\details{
+This is deliberately the slow, explicit version of what \code{\link[=tri_fun]{tri_fun()}} does in
+one vectorised pass: every facet is visited in an R loop and gets its own
+\code{lm()} fit. It is here to show the mechanics, and because a per-facet plane
+fit is a genuinely different estimator from barycentric interpolation when a
+facet contains more than three points.
 }
