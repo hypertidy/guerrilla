@@ -25,6 +25,6 @@ that is enough to draw it.
 }
 \examples{
 xy <- cbind(runif(50), runif(50))
-g <- tri_fun(xy, xy[, 1] + xy[, 2])
+g <- grid_barycentric(xy, xy[, 1] + xy[, 2])
 plot(g)
 }

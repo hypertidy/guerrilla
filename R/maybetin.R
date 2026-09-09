@@ -2,15 +2,19 @@
 ##https://stat.ethz.ch/pipermail/r-sig-geo/2011-November/013525.html
 #' Interpolate by fitting a plane within each tessellation facet
 #'
+#' Superseded. Use [grid_facet_lm()] for the Delaunay case and [grid_voronoi()]
+#' for the Dirichlet one, both of which take the same arguments as everything
+#' else here and return a grid rather than a point pattern.
+#'
 #' Tessellate a marked point pattern into Dirichlet (Voronoi) cells or Delaunay
 #' triangles, fit a linear trend in x and y to the marks falling within each
 #' facet, and predict that trend at a set of grid locations.
 #'
-#' This is deliberately the slow, explicit version of what [tri_fun()] does in
-#' one vectorised pass: every facet is visited in an R loop and gets its own
-#' `lm()` fit. It is here to show the mechanics, and because a per-facet plane
-#' fit is a genuinely different estimator from barycentric interpolation when a
-#' facet contains more than three points.
+#' Worth knowing what the two methods were: a Dirichlet tile contains exactly
+#' one point, so `method = "dirichlet"` fits an intercept and nothing else, and
+#' predicts that one point's value across its whole tile. It is nearest
+#' neighbour, by way of a linear model per tile in an R loop. [grid_voronoi()]
+#' is the same numbers, and says so.
 #'
 #' @param X spatstat object
 #' @param nx number of x coords
@@ -22,6 +26,7 @@
 #'
 #' @return ppp object
 #' @export
+#' @keywords internal
 facets <- function(X, nx, ny, x=NULL, y=NULL, na.v=0, method= c("dirichlet", "delaunay")){
 
   method <- match.arg(method)

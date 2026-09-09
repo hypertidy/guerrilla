@@ -1,5 +1,57 @@
 # guerrilla 0.3.0.9000
 
+## Interpolation has a name, and the weights are visible
+
+`tri_fun()` said what it was implemented with. The methods are now named for
+what they compute, and the arithmetic each one rests on is written out in R
+next to the fast path, so the vignette can show it rather than assert it.
+
+* New `grid_barycentric()` replaces `tri_fun()`, which is deprecated and still
+works. Same numbers, plus a `duplicates` argument and an `engine` argument.
+
+* New `bary_weights()` computes barycentric weights for a triangle in six lines
+of arithmetic: the same three numbers are the point-in-triangle test and the
+interpolation rule, which is the whole idea. New `find_triangle()` locates
+points in a triangulation with **geos**, using an STRtree for candidates and
+`bary_weights()` to decide. `grid_barycentric(engine = "R")` runs the whole
+interpolation that way and agrees with `geometry::tsearch()` to 4e-16 on the
+package's own example data.
+
+* New `grid_voronoi()` fills a grid from the Voronoi tessellation, which is
+nearest neighbour -- a tile is everywhere closer to one data point than to any
+other. Built on `geos::geos_voronoi_polygons()`.
+
+* New `grid_facet_lm()` fits `value ~ x + y` inside each Delaunay triangle.
+Three points determine a plane, so this reproduces `grid_barycentric()`; it
+exists because seeing that happen is the point.
+
+  `facets(method = "dirichlet")` was not doing what it looked like. A Voronoi
+  tile holds exactly one point, so the per-tile model had one observation and
+  three parameters, fitted an intercept, and predicted that value across the
+  tile. It was nearest neighbour computed the expensive way, and it is bitwise
+  identical to `grid_voronoi()`. `facets()` is kept, superseded and documented
+  as such.
+
+* `mesh_raster()` on a `mesh3d` was calling a helper that did not exist, so
+that path was broken. It now runs the second half of `grid_barycentric()`
+directly: the triangles are already there, so there is nothing to triangulate.
+There is a test for it that builds a `mesh3d` by hand, rather than needing Rvcg
+installed to find out.
+
+## Input is coordinates, not a class
+
+* New `xyz_input()` reads points from anything **wk** understands -- `wk::xy()`,
+`wk::xyz()`, sf and sfc columns, a matrix, a data frame -- and returns
+coordinates, values and a coordinate reference system. Where a `z` is present it
+is the value being interpolated, so `wk::xyz(x, y, z)` is a complete argument to
+`grid_barycentric()` on its own.
+
+* A coordinate reference system carried in on the input is carried out on the
+grid. Nothing in the interpolation looks at it: the arithmetic is planar, and it
+is the caller's business whether that is reasonable for their coordinates.
+
+* **wk** and **geos** join Imports.
+
 ## The grid is a list now
 
 Everything that returned a `RasterLayer` returns a `guerrilla_grid`, which is a
@@ -46,7 +98,7 @@ Rewritten onto the new grid, converting to a raster only where a third-party
 function needs one -- which makes the boundary between this package and the
 statistical engines visible, rather than incidental.
 
-# guerrilla dev
+## Getting the package to build again
 
 * The vignette builds again. Two things were stopping it:
 
@@ -87,7 +139,7 @@ transect compressed, taking installed data from 1.2 MB to 103 kB.
 
 * Remove maptools
 
-# guerilla 0.2.0
+# guerrilla 0.2.0
 
 * Tiny release to bump the universe. 
 

@@ -98,9 +98,9 @@ The most simple thing possible is to define a grid and populate that with values
 
 
 
-Note that `defaultgrid()` covers the exact extent of the input points, so the
-outermost samples land on the boundary of the grid. Padding the extent a little
-is generally good practice; do it explicitly when you want it.
+Note that `grid_spec()` covers the exact extent of the input points, so the
+outermost samples land on the boundary of the grid. Pad the extent when you want
+a margin: `grid_spec(xy, pad = 0.05)` grows it by 5% in each direction.
 
 ```{r}
 library(raster)
@@ -142,12 +142,14 @@ plot(tpsgrid, asp = "")
 
 
 
-# Bilinear triangulation. 
+# Bilinear triangulation
 
-This is identical to Matlab's griddata(, method = "bilinear")
+This is identical to Matlab's `griddata(, method = "bilinear")`, and to GDAL's
+`gdal_grid -a linear`. Triangulate the points, and inside each triangle put the
+plane through its three corner values.
 
 ```{r}
-trigrid <- tri_fun(lonlat, val, r0)
+trigrid <- grid_barycentric(lonlat, val, r0)
 trigrid
 
 ## should be identical, generalizing for mesh3d use
@@ -157,64 +159,94 @@ stopifnot(identical(trigrid$values, t2$values))
 plot(trigrid)
 ```
 
+## Where the weights come from
 
-# Delaunay and Diriclet
+`grid_barycentric()` gets its answer from one call to `geometry::tsearch()`,
+which finds the containing triangle for every cell and its barycentric weights
+in a single pass of C. That is the right way to compute it and the wrong way to
+learn it, so the same thing is also written out in R.
 
-
-What about Delaunay and Dirichlet without interpolation? 
-
-
-```{r}
-graphics.off()
-## input must be ppp
-library(spatstat.geom)
-
-gridToOwin <- function(x) {
-  owin(x$extent[1:2], x$extent[3:4])
-}
-colfun <- viridis::viridis
-rbase <- r0
-d <- bw
-xname <- "Lon"
-yname <- "Lat"
-varname <- "temp"
-pObj <- ppp(d[[xname]], d[[yname]], window = gridToOwin(rbase), marks = d[[varname]])
-
-lltes<-delaunay(pObj)
-meanval <- numeric(length(lltes[[3]]))
-  for (i in seq_along(meanval)) {
-  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-       }
-plot(lltes, do.col = TRUE, values = meanval,
-     col = colourmap(colfun(20), range = range(meanval)), main = "")
-points(d[,c(xname, yname)])
-
-lltes<-dirichlet(pObj)
-meanval <- numeric(length(lltes[[3]]))
-  for (i in seq_along(meanval)) {
-  meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
-  }
-
-plot(lltes, do.col = TRUE, values = meanval,
-     col = colourmap(colfun(20), range = range(meanval)), main = "")
-points(d[,c(xname, yname)])
-
-```
-
-
-
-
-
-Grid interpolation from Dirichlet or Delaunay. This is much slower than the triangulate and cart2bary method above (**Mike needs to illustrate this**) 
+For a point inside a triangle, the barycentric weights say how much of each
+corner the point is made of. They sum to one, and they are all non-negative
+exactly when the point is inside -- so the same three numbers are both a
+point-in-triangle test and the interpolation rule.
 
 ```{r}
- 
- nx <- rbase$dimension[1]; ny <- rbase$dimension[2]
- fcs.dir <- facets(pObj, nx = nx, ny = ny, method = "dirichlet")
- plot(rasterFromXYZ(as.data.frame(fcs.dir)))
- fcs.del <- facets(pObj, nx = nx, ny = ny, method = "delaunay")
- plot(rasterFromXYZ(as.data.frame(fcs.del)))
+tri <- cbind(c(0, 1, 0), c(0, 0, 1))
+bary_weights(tri, rbind(c(0.25, 0.25), c(1/3, 1/3), c(1, 1)))
 ```
+
+The first point is a quarter of the way in from two corners, the second is the
+centroid, and the third is outside -- which shows up as a negative weight
+rather than as a separate test.
+
+Interpolating is then the weighted sum of the corner values, and
+`engine = "R"` does the whole job that way: `find_triangle()` to locate each
+cell, `bary_weights()` to weight it. It is much slower, and it agrees with the
+C to floating point.
+
+```{r}
+slow <- grid_barycentric(lonlat, val, r0, engine = "R")
+ok <- !is.na(slow$values)
+max(abs(slow$values[ok] - trigrid$values[ok]))
+```
+
+# Delaunay and Voronoi
+
+The tessellations themselves, drawn. GEOS builds both.
+
+```{r}
+library(geos)
+pts <- as_geos_geometry(wk::xy(lonlat[, 1], lonlat[, 2]))
+coll <- geos_make_collection(pts)
+
+op <- par(mfrow = c(2, 1), mar = c(2, 2, 2, 1))
+plot(geos_unnest(geos_delaunay_triangles(coll), keep_multi = FALSE),
+     col = NA, border = "grey40", main = "Delaunay triangles")
+points(lonlat, pch = 16, cex = 0.4)
+plot(geos_unnest(geos_voronoi_polygons(coll), keep_multi = FALSE),
+     col = NA, border = "grey40", main = "Voronoi tiles")
+points(lonlat, pch = 16, cex = 0.4)
+par(op)
+```
+
+The two are duals of each other, and they answer different questions. A
+Delaunay triangle has three data points at its corners, so a value inside it
+can be a blend of three. A Voronoi tile has one data point in it and consists
+of everywhere closer to that point than to any other, so a value inside it can
+only be that one point's value.
+
+Which means the Voronoi tessellation *is* nearest neighbour:
+
+```{r}
+vor <- grid_voronoi(lonlat, val, r0)
+plot(vor)
+```
+
+Note that it filled the whole grid, where `grid_barycentric()` left the corners
+`NA`. Voronoi tiles cover the plane, so nothing is ever outside them. That is
+convenient, and it is also this method's main way of lying to you: a cell far
+from any data still gets a confident answer.
+
+## The slow way round
+
+Fitting `value ~ x + y` inside each Delaunay triangle gives the same surface as
+barycentric interpolation, because three points determine a plane and least
+squares through exactly three points is that plane:
+
+```{r}
+lmgrid <- grid_facet_lm(lonlat, val, r0)
+both <- !is.na(lmgrid$values) & !is.na(trigrid$values)
+max(abs(lmgrid$values[both] - trigrid$values[both]))
+```
+
+This package used to offer that as `facets()`, along with a Dirichlet variant.
+The Dirichlet variant was not doing what it looked like it was doing: a Voronoi
+tile holds exactly one point, so the per-tile `lm(value ~ x + y)` had one
+observation and three parameters, fitted an intercept, and predicted that
+single value across the tile. It was nearest neighbour, computed by running a
+linear model per tile in an R loop. `grid_voronoi()` above is the same numbers
+under an honest name.
 
 # IDW
 
@@ -304,8 +336,8 @@ plot(fsmgrid)
 # Akima (via the interp package)
 
 `interp(method = "linear")` triangulates and interpolates linearly within each
-triangle, which is the same thing `tri_fun()` does. Worth checking that claim
-rather than believing it: on this data the two agree to within 1e-15.
+triangle, which is the same thing `grid_barycentric()` does. Worth checking that
+claim rather than believing it: on this data the two agree to within 1e-15.
 
 ```{r}
 library(interp)
@@ -324,7 +356,7 @@ akifun <- function(xy, value, grid = NULL, ...) {
 akigrid <- akifun(lonlat, val, grid = r0)
 plot(akigrid)
 
-## the same estimator as tri_fun(), so it had better agree
+## the same estimator as grid_barycentric(), so it had better agree
 ok <- !is.na(akigrid$values) & !is.na(trigrid$values)
 max(abs(akigrid$values[ok] - trigrid$values[ok]))
 ```

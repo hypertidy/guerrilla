@@ -33,6 +33,6 @@ default it writes to GDAL's in-memory filesystem.
 }
 \examples{
 xy <- cbind(runif(50), runif(50))
-g <- tri_fun(xy, xy[, 1])
+g <- grid_barycentric(xy, xy[, 1])
 if (requireNamespace("terra", quietly = TRUE)) as_terra(g)
 }

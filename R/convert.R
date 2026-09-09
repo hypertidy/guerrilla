@@ -51,7 +51,7 @@ as.data.frame.guerrilla_grid <- function(x, row.names = NULL, optional = FALSE,
 #' @export
 #' @examples
 #' xy <- cbind(runif(50), runif(50))
-#' g <- tri_fun(xy, xy[, 1] + xy[, 2])
+#' g <- grid_barycentric(xy, xy[, 1] + xy[, 2])
 #' plot(g)
 plot.guerrilla_grid <- function(x, col = grDevices::hcl.colors(24, "YlGnBu"),
                                 asp = 1, ...) {
@@ -82,7 +82,7 @@ plot.guerrilla_grid <- function(x, col = grDevices::hcl.colors(24, "YlGnBu"),
 #' @name converters
 #' @examples
 #' xy <- cbind(runif(50), runif(50))
-#' g <- tri_fun(xy, xy[, 1])
+#' g <- grid_barycentric(xy, xy[, 1])
 #' if (requireNamespace("terra", quietly = TRUE)) as_terra(g)
 NULL
 

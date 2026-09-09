@@ -33,14 +33,19 @@ facets(
 ppp object
 }
 \description{
+Superseded. Use \code{\link[=grid_facet_lm]{grid_facet_lm()}} for the Delaunay case and \code{\link[=grid_voronoi]{grid_voronoi()}}
+for the Dirichlet one, both of which take the same arguments as everything
+else here and return a grid rather than a point pattern.
+}
+\details{
 Tessellate a marked point pattern into Dirichlet (Voronoi) cells or Delaunay
 triangles, fit a linear trend in x and y to the marks falling within each
 facet, and predict that trend at a set of grid locations.
+
+Worth knowing what the two methods were: a Dirichlet tile contains exactly
+one point, so \code{method = "dirichlet"} fits an intercept and nothing else, and
+predicts that one point's value across its whole tile. It is nearest
+neighbour, by way of a linear model per tile in an R loop. \code{\link[=grid_voronoi]{grid_voronoi()}}
+is the same numbers, and says so.
 }
-\details{
-This is deliberately the slow, explicit version of what \code{\link[=tri_fun]{tri_fun()}} does in
-one vectorised pass: every facet is visited in an R loop and gets its own
-\code{lm()} fit. It is here to show the mechanics, and because a per-facet plane
-fit is a genuinely different estimator from barycentric interpolation when a
-facet contains more than three points.
-}
+\keyword{internal}

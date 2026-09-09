@@ -69,7 +69,7 @@ test_that("as.data.frame gives one row per cell", {
 
 test_that("converters round trip the dimension, extent and values", {
   xy <- cbind(runif(60), runif(60))
-  g <- suppressMessages(tri_fun(xy, xy[, 1]))
+  g <- suppressMessages(grid_barycentric(xy, xy[, 1]))
 
   skip_if_not_installed("raster")
   r <- as_raster(g)

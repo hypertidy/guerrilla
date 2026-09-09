@@ -9,38 +9,23 @@ tri_fun(xy, value, grid = NULL, duplicates = mean, ...)
 \arguments{
 \item{xy}{coordinates}
 
-\item{value}{one value per row of \code{xy}}
+\item{value}{value to interpolate}
 
-\item{grid}{a \code{\link[=grid_spec]{grid_spec()}} to interpolate onto, or \code{NULL} for a default one}
+\item{grid}{grid to use}
 
-\item{duplicates}{function used to combine values at repeated coordinates,
-or \code{NULL} to leave them alone and let the triangulation fail}
+\item{duplicates}{passed to \code{\link[=grid_barycentric]{grid_barycentric()}}}
 
-\item{...}{ignored}
+\item{...}{passed to \code{\link[=grid_barycentric]{grid_barycentric()}}}
 }
 \value{
 A \code{guerrilla_grid} with values.
 }
 \description{
-Triangulate the input coordinates and estimate a value at every cell of a
-target grid, from the barycentric coordinates of the cell centre within the
-triangle that contains it.
-}
-\details{
-This is the same thing MATLAB calls \code{griddata(method = "linear")}, and the
-same thing GDAL's \code{gdal_grid} calls the \code{linear} algorithm. Within a triangle
-the surface is a plane through the three corner values, so the result is
-continuous, passes exactly through the input values, and invents nothing
-beyond them.
-
-Cells outside the convex hull of \code{xy} are in no triangle and are left \code{NA}.
-Points at the same coordinate are collapsed first, because a triangulation
-cannot represent two values in one place; see \code{\link[=collapse_duplicates]{collapse_duplicates()}}.
+Superseded by \code{\link[=grid_barycentric]{grid_barycentric()}}, which does the same thing under a name
+that says what it is.
 }
 \examples{
-xy <- cbind(runif(100), runif(100))
-tri_fun(xy, xy[, 1] + xy[, 2])
-
-## onto a grid you chose
-tri_fun(xy, xy[, 1], grid_spec(xy, dimension = c(20, 20), pad = 0.1))
+xy <- cbind(runif(50), runif(50))
+grid_barycentric(xy, xy[, 1])  ## use this instead
 }
+\keyword{internal}

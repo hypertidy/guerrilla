@@ -22,7 +22,7 @@ mesh_raster(x, grid = NULL, n = 128, ...)
 
 \item{n}{cells across, when \code{grid} is not supplied}
 
-\item{...}{passed to methods}
+\item{...}{passed to methods, and on to \code{\link[=grid_barycentric]{grid_barycentric()}}}
 }
 \value{
 A \code{guerrilla_grid} with values.
@@ -31,7 +31,8 @@ A \code{guerrilla_grid} with values.
 Create a grid by interpolating across triangles.
 }
 \details{
-For x-y-z input this is \code{\link[=tri_fun]{tri_fun()}} with the arguments arranged differently:
+For x-y-z input this is \code{\link[=grid_barycentric]{grid_barycentric()}} with the arguments arranged
+differently:
 triangulate, then estimate each cell from the triangle containing it. The
 difference is that \code{mesh_raster()} also takes a \code{mesh3d}, where the triangles
 already exist and no triangulation is needed.

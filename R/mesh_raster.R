@@ -18,7 +18,8 @@ grid_for <- function(xy, n = 128) {
 #'
 #' Create a grid by interpolating across triangles.
 #'
-#' For x-y-z input this is [tri_fun()] with the arguments arranged differently:
+#' For x-y-z input this is [grid_barycentric()] with the arguments arranged
+#' differently:
 #' triangulate, then estimate each cell from the triangle containing it. The
 #' difference is that `mesh_raster()` also takes a `mesh3d`, where the triangles
 #' already exist and no triangulation is needed.
@@ -31,7 +32,7 @@ grid_for <- function(xy, n = 128) {
 #' @param x a matrix or data frame of three columns, or a `mesh3d`
 #' @param grid a [grid_spec()] to interpolate onto, or `NULL` for a default one
 #' @param n cells across, when `grid` is not supplied
-#' @param ... passed to methods
+#' @param ... passed to methods, and on to [grid_barycentric()]
 #'
 #' @return A `guerrilla_grid` with values.
 #' @export
@@ -81,14 +82,18 @@ mesh_raster.mesh3d <- function(x, grid = NULL, n = 128, ...) {
   ## triangle index - rows are .vx0, .vx1, .vx2 for geometry pkg
   triangles <- t(x$it)
   if (is.null(grid)) grid <- grid_for(xyz, n) else grid <- as_grid(grid)
-  interpolate_triangles(xyz, triangles, grid)
+  ## the triangles already exist, so there is nothing to triangulate: this is
+  ## the second half of grid_barycentric() on its own.
+  grid$values <- bary_interpolate_geometry(xyz[, 1:2, drop = FALSE], xyz[, 3L],
+                                           triangles, grid_xy(grid))
+  grid
 }
 #' @name mesh_raster
 #' @export
 mesh_raster.matrix <- function(x, grid = NULL, n = 128, ...) {
   xyz <- as_xy(x, 3L)
   if (is.null(grid)) grid <- grid_for(xyz, n)
-  tri_fun(xyz[, 1:2, drop = FALSE], xyz[, 3L], grid = grid, ...)
+  grid_barycentric(xyz[, 1:2, drop = FALSE], xyz[, 3L], grid = grid, ...)
 }
 
 #' @name mesh_raster
