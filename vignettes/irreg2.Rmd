@@ -27,7 +27,6 @@ knitr::opts_chunk$set(
 Define utility functions for repeated usage, and load required packages. 
 
 ```{r}
-scl <- function(x) (x - min(x, na.rm = TRUE))/diff(range(x, na.rm = TRUE))
 library(guerrilla)
 library(raster)
 library(gstat)
@@ -161,7 +160,8 @@ meanval <- numeric(length(lltes[[3]]))
   for (i in seq_along(meanval)) {
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
        }
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1], asp = "")
+plot(lltes, do.col = TRUE, values = meanval,
+     col = colourmap(colfun(20), range = range(meanval)), main = "")
 points(d[,c(xname, yname)])
 
 lltes<-dirichlet(pObj)
@@ -170,7 +170,8 @@ meanval <- numeric(length(lltes[[3]]))
   meanval[i] <- mean(marks(pObj[lltes[[3]][[i]]]))
   }
 
-plot(as(lltes, "SpatialPolygons"), col = colfun(20)[scl(meanval)*19 + 1], asp = NA)
+plot(lltes, do.col = TRUE, values = meanval,
+     col = colourmap(colfun(20), range = range(meanval)), main = "")
 points(d[,c(xname, yname)])
 
 ```
@@ -269,16 +270,19 @@ plot(fsmgrid, asp = "")
 
 # Akima (via the interp package)
 
+`interp(method = "linear")` triangulates and interpolates linearly within each
+triangle, which is the same thing `tri_fun()` does. Worth checking that claim
+rather than believing it: on this data the two agree to within 1e-15.
+
 ```{r}
 library(interp)
 akifun <- function(xy, value, grid = NULL, ...) {
-     if (is.null(grid)) grid <- defaultgrid(xy)
-  x0 <- xFromCol(grid)
-  y0 <- yFromRow(grid)
-
-  aklin <- interp(xy[,1], xy[,2], value, 
-              x0, y0, ...)
-  raster(list(x = aklin$x, y = rev(aklin$y), z = aklin$z[,ncol(aklin$z):1]))
+  if (is.null(grid)) grid <- defaultgrid(xy)
+  ## interp() wants both output axes increasing, and yFromRow() runs top-down.
+  ## Hand it a descending yo and it returns a grid of all NA, without complaint.
+  aklin <- interp(xy[,1], xy[,2], value,
+                  xFromCol(grid), rev(yFromRow(grid)), ...)
+  raster(list(x = aklin$x, y = aklin$y, z = aklin$z))
 }
 
 akigrid <- akifun(lonlat, val, grid = r0)

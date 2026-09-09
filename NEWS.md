@@ -1,5 +1,18 @@
 # guerrilla dev
 
+* The vignette builds again. Two things were stopping it:
+
+  - `as(tess, "SpatialPolygons")` was a coercion registered by maptools, so
+  both tessellation plots died once maptools went away. They now use
+  spatstat's own `plot.tess(do.col = TRUE)`, which needs no sp at all and
+  gets a colour ribbon for free.
+
+  - `interp::interp()` returns a grid of all `NA`, without complaint, when
+  `yo` is descending -- and `raster::yFromRow()` is top-down. akima tolerated
+  it. The vignette's `akifun()` now sorts the axis. The fixed version agrees
+  with `tri_fun()` to 9e-16, which it should: both are linear interpolation
+  over a Delaunay triangulation.
+
 * `defaultgrid()` no longer asserts a longitude/latitude coordinate reference
 system by default. Nothing in this package requires geographic input, so the
 default was wrong for most uses -- including this package's own `tri_fun()`
