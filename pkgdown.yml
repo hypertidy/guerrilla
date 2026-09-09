@@ -1,7 +1,12 @@
-pandoc: 2.7.3
-pkgdown: 1.6.1
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
-  irreg2: irreg2.html
-last_built: 2021-07-02T04:52Z
-
+  grids: grids.html
+  interpolating: interpolating.html
+  projection: projection.html
+  triangulation: triangulation.html
+last_built: 2026-09-09T22:02Z
+urls:
+  reference: https://hypertidy.github.io/guerrilla/reference
+  article: https://hypertidy.github.io/guerrilla/articles
