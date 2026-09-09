@@ -6,19 +6,24 @@
 \alias{guerrilla-package}
 \title{guerrilla: Illustrate Various Methods of Interpolation for Irregular Data}
 \description{
-Examples of interpolating irregular data, to illustrate the 
- mechanics of various methods and some easy tools to run them.
+Examples of interpolating irregular data, to illustrate the mechanics of various methods and some easy tools to run them.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/hypertidy/guerrilla}
+  \item \url{https://hypertidy.github.io/guerrilla/}
   \item Report bugs at \url{https://github.com/hypertidy/guerrilla/issues}
 }
 
 }
 \author{
 \strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com}
+
+Authors:
+\itemize{
+  \item Michael Sumner \email{mdsumner@gmail.com}
+}
 
 Other contributors:
 \itemize{

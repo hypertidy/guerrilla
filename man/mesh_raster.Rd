@@ -7,33 +7,39 @@
 \alias{mesh_raster.data.frame}
 \title{Mesh raster}
 \usage{
-mesh_raster(x, grid = NULL, n = 128)
+mesh_raster(x, grid = NULL, n = 128, ...)
 
-\method{mesh_raster}{mesh3d}(x, grid = NULL, n = 128)
+\method{mesh_raster}{mesh3d}(x, grid = NULL, n = 128, ...)
 
-\method{mesh_raster}{matrix}(x, grid = NULL, n = 128)
+\method{mesh_raster}{matrix}(x, grid = NULL, n = 128, ...)
 
-\method{mesh_raster}{data.frame}(x, grid = NULL, n = 128)
+\method{mesh_raster}{data.frame}(x, grid = NULL, n = 128, ...)
 }
 \arguments{
-\item{x}{matrix of points, or a mesh3d}
+\item{x}{a matrix or data frame of three columns, or a \code{mesh3d}}
 
-\item{grid}{raster to populate}
+\item{grid}{a \code{\link[=grid_spec]{grid_spec()}} to interpolate onto, or \code{NULL} for a default one}
 
-\item{n}{grid size of raster if 'grid' not supplied}
+\item{n}{cells across, when \code{grid} is not supplied}
+
+\item{...}{passed to methods}
 }
 \value{
-Raster
+A \code{guerrilla_grid} with values.
 }
 \description{
-Create a raster by interpolating across triangles
+Create a grid by interpolating across triangles.
 }
 \details{
-At the moment, mesh_raster is identical to \link{tri_fun}
-for the matrix x-y-z case, but adds capability for
-a mesh3d object (of triangles).
-Barycentric interpolation is used to efficiently obtain
-a within-triangle estimate of a field of values
+For x-y-z input this is \code{\link[=tri_fun]{tri_fun()}} with the arguments arranged differently:
+triangulate, then estimate each cell from the triangle containing it. The
+difference is that \code{mesh_raster()} also takes a \code{mesh3d}, where the triangles
+already exist and no triangulation is needed.
+
+That case is worth having because it runs the argument backwards. A grid is
+one particular mesh -- a regular one, with the values at the vertices -- so
+turning an arbitrary mesh into a grid is resampling one mesh onto another,
+and barycentric interpolation is how you do it either way.
 }
 \examples{
 ## interpolate from raw points
@@ -41,15 +47,14 @@ xyz <- quakes[c("long", "lat", "depth")]
 xyz$depth <- -xyz$depth
 gx <- mesh_raster(xyz)
 rat <- 1/cos(mean(xyz[["lat"]]) * pi/180)
-raster::image(gx, asp = rat,
-  col = hcl.colors(12, "YlOrRd"))
+plot(gx, asp = rat, col = hcl.colors(12, "YlOrRd"))
 points(xyz, pch = "+", cex = 0.3)
 
 ## add some dummy points (we aren't modelling the world)
 xex <- cbind(expand.grid(long = range(xyz$long),
                          lat = range(xyz$lat)), depth = 0)
 g2 <- mesh_raster(rbind(xex, xyz))
-raster::image(g2, asp = rat)
+plot(g2, asp = rat)
 points(xyz, pch = "+", cex = 0.3)
 
 if (requireNamespace("maps", quietly = TRUE)) {
@@ -60,13 +65,12 @@ if (requireNamespace("maps", quietly = TRUE)) {
 if (requireNamespace("Rvcg", quietly = TRUE)) {
   data("humface", package = "Rvcg")
   grid <- mesh_raster(humface, n = 256)
-  raster::plot(grid, col = grey.colors(21),
-      breaks = quantile(grid, seq(0, 1, length = 22), na.rm = TRUE))
+  plot(grid, col = grey.colors(24))
 }
 
 ## and back the other way, in 3D
 if (interactive() && requireNamespace("anglr", quietly = TRUE)) {
-  anglr::plot3d(g2)
+  anglr::plot3d(as_raster(g2))
   rgl::aspect3d(1, rat, 0.1)
   rgl::points3d(xyz$long, xyz$lat, xyz$depth + 30)
 }

@@ -58,13 +58,36 @@ Plot the temperature data.
 plot(val)
 ```
 
-Create a grid to interpolate onto, this can be used repeatedly for many methods. 
+Create a grid to interpolate onto. The same grid is used for every method
+below, so the pictures can be compared.
 
 ```{r}
-library(raster)
+r0 <- grid_spec(lonlat, crs = "EPSG:4326")
+r0
+```
 
-r0 <- defaultgrid(lonlat, prj = "EPSG:4326")
+A grid in this package is a list, and that is the whole of it:
 
+```{r}
+str(unclass(r0))
+```
+
+`dimension` is how many cells across and down, `extent` is the region covered,
+`crs` is what the coordinates mean -- here they really are longitude and
+latitude, so we said so. There is no fourth secret thing. Every raster class in
+R is a container for these same few numbers plus a vector of values, which is
+why a plain list is enough to interpolate onto and why converting to any of
+those classes is a few lines:
+
+```{r}
+as_raster(r0)
+```
+
+Cell centres come from `grid_xy()`, and that single function is all the
+interpolation code below needs to know about grids:
+
+```{r}
+head(grid_xy(r0), 3)
 ```
 
 
@@ -80,13 +103,15 @@ outermost samples land on the boundary of the grid. Padding the extent a little
 is generally good practice; do it explicitly when you want it.
 
 ```{r}
+library(raster)
 rasgrid <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- defaultgrid(xy)
-   rasterize(xy, grid, field = value, ...)
+  if (is.null(grid)) grid <- grid_spec(xy)
+  ## raster::rasterize() wants a raster, so convert at the boundary
+  rasterize(xy, as_raster(grid), field = value, ...)
 }
 lastgrid <- rasgrid(lonlat, val, r0)
 
-plot(lastgrid, asp = "")
+plot(lastgrid)
 ```
 
 The main influence on the result here is purely pixel size, and we must consider the behaviour used when there is more than one value per pixel.  
@@ -101,9 +126,10 @@ to.
 ```{r}
 library(fields)
 tpsfun <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- defaultgrid(xy)
-  model <- Tps(xy, value, lon.lat = isLonLat(grid), method = "REML")
-  interpolate(grid, model, ...)
+  if (is.null(grid)) grid <- grid_spec(xy)
+  r <- as_raster(grid)
+  model <- Tps(xy, value, lon.lat = isLonLat(r), method = "REML")
+  interpolate(r, model, ...)
 }
 tpsgrid  <- tpsfun(lonlat, val)
 tpsgrid <- clamp(tpsgrid, minmax[1], minmax[2])
@@ -121,15 +147,14 @@ plot(tpsgrid, asp = "")
 This is identical to Matlab's griddata(, method = "bilinear")
 
 ```{r}
-library(geometry)
-library(sp)
-library(guerrilla)
-
-
 trigrid <- tri_fun(lonlat, val, r0)
+trigrid
+
 ## should be identical, generalizing for mesh3d use
 t2 <- mesh_raster(cbind(lonlat, val), r0)
-plot(trigrid, asp = "")
+stopifnot(identical(trigrid$values, t2$values))
+
+plot(trigrid)
 ```
 
 
@@ -144,8 +169,8 @@ graphics.off()
 ## input must be ppp
 library(spatstat.geom)
 
-rasterToOwin <- function(x) {
-  owin(c(xmin(x), xmax(x)), c(ymin(x), ymax(x)))
+gridToOwin <- function(x) {
+  owin(x$extent[1:2], x$extent[3:4])
 }
 colfun <- viridis::viridis
 rbase <- r0
@@ -153,7 +178,7 @@ d <- bw
 xname <- "Lon"
 yname <- "Lat"
 varname <- "temp"
-pObj <- ppp(d[[xname]], d[[yname]], window = rasterToOwin(rbase), marks = d[[varname]])
+pObj <- ppp(d[[xname]], d[[yname]], window = gridToOwin(rbase), marks = d[[varname]])
 
 lltes<-delaunay(pObj)
 meanval <- numeric(length(lltes[[3]]))
@@ -184,10 +209,11 @@ Grid interpolation from Dirichlet or Delaunay. This is much slower than the tria
 
 ```{r}
  
- fcs.dir <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "dirichlet")
- plot(rasterFromXYZ(as.data.frame(fcs.dir)), asp = NA)
- fcs.del <- facets(pObj, nx = ncol(rbase) , ny = nrow(rbase), method = "delaunay")
- plot(rasterFromXYZ(as.data.frame(fcs.del)), asp = NA)
+ nx <- rbase$dimension[1]; ny <- rbase$dimension[2]
+ fcs.dir <- facets(pObj, nx = nx, ny = ny, method = "dirichlet")
+ plot(rasterFromXYZ(as.data.frame(fcs.dir)))
+ fcs.del <- facets(pObj, nx = nx, ny = ny, method = "delaunay")
+ plot(rasterFromXYZ(as.data.frame(fcs.del)))
 ```
 
 # IDW
@@ -195,19 +221,20 @@ Grid interpolation from Dirichlet or Delaunay. This is much slower than the tria
 ```{r}
 library(gstat)
 idwfun <- function(xy, value, grid = NULL, ...) {
-   if (is.null(grid)) grid <- defaultgrid(xy)
+  if (is.null(grid)) grid <- grid_spec(xy)
+  r <- as_raster(grid)
   d <- data.frame(lon = xy[,1], lat = xy[,2], value = value)
   coordinates(d) <- ~lon+lat
-  proj4string(d) <- proj4string(grid)
+  proj4string(d) <- proj4string(r)
   ## inverse distance weighted (IDW)
   mg <- gstat(id = "value", formula = value~1, locations = c("lon", "lat"), data = d, ...) 
-  interpolate(grid, mg)          
+  interpolate(r, mg)          
 }
 
 
 dw <- idwfun(lonlat, val, r0)
 dw <- idwfun(lonlat, val, r0, set = list(idp = 1.5))
-plot(dw, asp = NA);contour(trigrid, add = TRUE)
+plot(dw); contour(as_raster(trigrid), add = TRUE)
 
 
 ```
@@ -217,18 +244,19 @@ plot(dw, asp = NA);contour(trigrid, add = TRUE)
 ```{r}
 
 krifun <- function(xy, value, grid = NULL, ...) {
-   if (is.null(grid)) grid <- defaultgrid(xy)
+  if (is.null(grid)) grid <- grid_spec(xy)
+  r <- as_raster(grid)
   d <- data.frame(lon = xy[,1], lat = xy[,2], value = value)
   coordinates(d) <- ~lon+lat
-  proj4string(d) <- proj4string(grid)
+  proj4string(d) <- proj4string(r)
  v <- variogram(value~1, d)
  m <- fit.variogram(v, vgm(1, "Sph", 150, 1))
  gOK <- gstat(NULL, "value", value~1, d, model=m)
- interpolate(grid, gOK)
+ interpolate(r, gOK)
 
 }
 krigrid <- krifun(lonlat, val, grid = r0)
-plot(krigrid, asp = "")
+plot(krigrid)
 
 ```
 
@@ -240,12 +268,11 @@ This needs work, mgcv has more promise than this shows ;)
 
 ```{r}
 library(mgcv)
-library(dplyr)
-gamfit <- gam(temp ~ s(Lon)+ s(Lat), data = bw,family = gaussian, method = "REML")
-library(raster)
-g <- raster(extent(as.matrix(bw[c("Lon", "Lat")])), nrows = 50, ncols = 50)
-pred <- predict(gamfit, as.data.frame(g, xy = TRUE) %>% dplyr::rename(Lon = x, Lat = y) %>% dplyr::select(Lon, Lat))
-plot(setValues(g, c(pred)), asp = "")
+gamfit <- gam(temp ~ s(Lon) + s(Lat), data = bw, family = gaussian, method = "REML")
+g <- grid_spec(lonlat, dimension = c(50, 50))
+gxy <- grid_xy(g)
+g$values <- c(predict(gamfit, data.frame(Lon = gxy[, 1], Lat = gxy[, 2])))
+plot(g)
 ```
 
 # fields
@@ -257,14 +284,20 @@ plot(setValues(g, c(pred)), asp = "")
 # plot(raster(look))
 
 fsmfun <- function(xy, value, grid = NULL) {
-    if (is.null(grid)) grid <- defaultgrid(xy)
-  nrow(grid) <- ncol(grid) ## apparently required
-  out <- as.image(value, x = xy, nx = nrow(grid), ny = ncol(grid))
-  raster(image.smooth( out, theta= 2.5) )
+  if (is.null(grid)) grid <- grid_spec(xy)
+  ## as.image() wants a square grid
+  n <- max(grid$dimension)
+  out <- as.image(value, x = xy, nx = n, ny = n)
+  sm <- image.smooth(out, theta = 2.5)
+  ## image.smooth() returns x, y, z with both axes increasing and z[x, y];
+  ## a guerrilla grid runs top-down, so flip back
+  g <- grid_spec(dimension = c(n, n), extent = grid$extent, crs = grid$crs)
+  g$values <- as.vector(sm$z[, rev(seq_len(ncol(sm$z)))])
+  g
 }
 
 fsmgrid <- fsmfun(lonlat, val, r0)
-plot(fsmgrid, asp = "")
+plot(fsmgrid)
 
 ```
 
@@ -277,16 +310,23 @@ rather than believing it: on this data the two agree to within 1e-15.
 ```{r}
 library(interp)
 akifun <- function(xy, value, grid = NULL, ...) {
-  if (is.null(grid)) grid <- defaultgrid(xy)
-  ## interp() wants both output axes increasing, and yFromRow() runs top-down.
-  ## Hand it a descending yo and it returns a grid of all NA, without complaint.
+  if (is.null(grid)) grid <- grid_spec(xy)
+  dm <- grid$dimension; ex <- grid$extent
+  ## interp() wants both output axes increasing, and grid rows run top-down.
+  ## Hand it a descending yo and it returns all NA, without complaint.
   aklin <- interp(xy[,1], xy[,2], value,
-                  xFromCol(grid), rev(yFromRow(grid)), ...)
-  raster(list(x = aklin$x, y = aklin$y, z = aklin$z))
+                  vaster::x_from_col(dm, ex, seq_len(dm[1])),
+                  rev(vaster::y_from_row(dm, ex, seq_len(dm[2]))), ...)
+  grid$values <- as.vector(aklin$z[, rev(seq_len(ncol(aklin$z)))])
+  grid
 }
 
 akigrid <- akifun(lonlat, val, grid = r0)
-plot(akigrid, asp = "")
+plot(akigrid)
+
+## the same estimator as tri_fun(), so it had better agree
+ok <- !is.na(akigrid$values) & !is.na(trigrid$values)
+max(abs(akigrid$values[ok] - trigrid$values[ok]))
 ```
 
 # Others
