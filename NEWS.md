@@ -1,5 +1,63 @@
 # guerrilla 0.3.0.9000
 
+## Coordinates of any magnitude, and a bug that had been waiting
+
+`geometry::tsearch()` builds a quadtree over the input points, and on some
+coordinate ranges the insertion fails outright with "Failed to insert point into
+QuadTree". This package's own transect, projected to metres on a local
+equal-area, is one of those ranges. So was the same data scaled by 1000. Scaled
+by 10000 it is fine, so it is not a threshold anyone can steer around.
+
+Barycentric weights do not change when a triangle and a point inside it are
+translated and scaled together, so `grid_barycentric()` (and `mesh_raster()`,
+which shares the path) now centres and scales the coordinates before
+triangulating and searching. The answer is unaffected and the failure cannot
+happen. Qhull is happier for the same reason.
+
+This only shows up once you leave degrees, which is a reason to try work in a
+projection even when nothing requires it.
+
+## GDAL's own gridder
+
+* New `grid_gdal()` runs `gdal_grid` and returns the result as a grid, so
+GDAL's interpolators sit on the same footing as the R ones and can be compared
+directly. On the package's own data:
+
+  - `"linear:radius=0.0"` and `grid_barycentric()` agree to 7e-15, on the same
+  cells;
+  - `"nearest"` and `grid_voronoi()` are bitwise identical across 3000 cells,
+  having arrived by completely different routes -- a nearest point search in
+  GDAL, a GEOS Voronoi tessellation here;
+  - `"invdist:power=2.0"` and `grid_idw()` agree to 1e-4.
+
+* Two `gdal_grid` defaults are worth knowing and are now documented and
+handled. `linear` does not stop at the convex hull: the default `radius` of -1
+is an infinite search, so a cell in no triangle silently takes its nearest
+point's value. And cells it cannot estimate are filled with 0 and not tagged as
+no data, so nothing downstream can tell that 0 from a measurement.
+`grid_gdal()` sets `nodata=nan` unless the algorithm string already sets one.
+
+* `gdal_grid` is reachable from R only through `sf::gdal_utils()`.
+\pkg{gdalraster} wraps `warp`, `translate` and `rasterize` but not `GDALGrid`,
+and the unified `gdal` command line added in GDAL 3.11 has no grid subcommand
+to wrap. That is the only reason `sf` is in Suggests.
+
+## New article: coordinates, projections, and GDAL
+
+Interpolating the transect in degrees and in a local equal-area gives surfaces
+that differ by up to a fifth of the range of the data, and cover different
+areas, because a straight line in one projection is not a straight line in
+another and the convex hull is made of straight lines. Neither is more correct
+and the interpolation cannot choose; the article is about making the question
+visible rather than settling it.
+
+It also closes the loop on thin plate splines. `grid_tps()` fits a spline to
+`(x, y) -> value`; GDAL's `-tps` warping fits one to `(pixel, line) -> (x, y)`.
+Fitting `fields::Tps()` to the same sixteen ground control points GDAL was
+given, and comparing against which input pixel each warped cell actually came
+from, gives a mean offset of 0.001 pixels over 8631 cells. Georeferencing an
+image and interpolating a temperature field are the same operation.
+
 ## The methods are functions now, not closures in a vignette
 
 Six of the methods the vignette demonstrated existed only as closures inside

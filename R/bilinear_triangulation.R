@@ -4,6 +4,11 @@
 ## raise an error, while points that are all on one line make it return zero
 ## triangles and only warn. Both mean the same thing here.
 delaunay_index <- function(xy) {
+  ## Qhull is happier on coordinates near the origin and near unit size, and
+  ## the triangulation of a set of points does not depend on where they are or
+  ## how big they are, so normalise first; see normalise_xy().
+  cs <- xy_centre_scale(xy)
+  xy <- normalise_xy(xy, cs$centre, cs$scale)
   ## Qhull's warnings are left alone on purpose: "n points missing from
   ## triangulation" is how you find out that duplicates = NULL silently
   ## dropped your data.
@@ -98,9 +103,36 @@ grid_barycentric <- function(x, value = NULL, grid = NULL, duplicates = mean,
   grid
 }
 
+## Barycentric weights do not change under translation and scaling: a triangle
+## and a point inside it stay in the same proportions when both are moved and
+## shrunk together. So the search can be done on coordinates centred at zero and
+## about one unit across, and the answer is the same.
+##
+## That is not tidiness. geometry::tsearch() builds a quadtree over the points,
+## and on some coordinate ranges the insertion fails outright with "Failed to
+## insert point into QuadTree". This package's own transect, projected to metres
+## on a local equal-area, is one such case; the same points in kilometres are
+## fine, and so are the same points scaled by 1e4, but not by 1e3. It is not a
+## threshold you can steer around, so the fix is to take the variable away.
+normalise_xy <- function(xy, centre, scale) {
+  cbind((xy[, 1L] - centre[1L]) / scale,
+        (xy[, 2L] - centre[2L]) / scale, deparse.level = 0L)
+}
+
+xy_centre_scale <- function(xy) {
+  rx <- range(xy[, 1L])
+  ry <- range(xy[, 2L])
+  span <- max(diff(rx), diff(ry))
+  list(centre = c(mean(rx), mean(ry)),
+       scale = if (span > 0) span else 1)
+}
+
 ## tsearch() finds the containing triangle and its barycentric weights in one
 ## C pass; the estimate is the weighted sum of that triangle's corner values.
 bary_interpolate_geometry <- function(xy, value, triangles, points) {
+  cs <- xy_centre_scale(xy)
+  xy <- normalise_xy(xy, cs$centre, cs$scale)
+  points <- normalise_xy(points, cs$centre, cs$scale)
   hit <- geometry::tsearch(xy[, 1L], xy[, 2L], triangles,
                            points[, 1L], points[, 2L], bary = TRUE)
   ok <- !is.na(hit$idx)

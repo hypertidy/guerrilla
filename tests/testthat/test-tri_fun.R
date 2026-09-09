@@ -118,3 +118,25 @@ test_that("mesh_raster makes its own grid from a mesh3d", {
   ## squarish cells: the extent is 10 wide and 1 tall, so the grid should be too
   expect_equal(unname(diff(grid_res(g))), 0, tolerance = 0.05)
 })
+
+test_that("coordinates of any magnitude work", {
+  ## geometry::tsearch() builds a quadtree and fails on some coordinate ranges;
+  ## this is one, and the interpolation normalises first so it never arises
+  d <- readxl::read_excel(system.file("extdata", "BW-Zooplankton_env.xls",
+                                      package = "guerrilla", mustWork = TRUE))
+  ll <- as.matrix(d[c("Lon", "Lat")])
+  big <- cbind((ll[, 1] - mean(ll[, 1])) * 1000, (ll[, 2] - mean(ll[, 2])) * 1000)
+  grid <- grid_spec(big, dimension = c(50, 40))
+  ## the raw call is what fails
+  expect_error(geometry::tsearch(big[, 1], big[, 2], geometry::delaunayn(big),
+                                 grid_xy(grid)[, 1], grid_xy(grid)[, 2],
+                                 bary = TRUE),
+               "QuadTree")
+  ## and this does not
+  g <- grid_barycentric(big, d$temp, grid)
+  expect_true(sum(!is.na(g$values)) > 1000)
+  ## same surface as the unscaled data, which is the reason normalising is safe
+  small <- grid_barycentric(ll, d$temp, grid_spec(ll, dimension = c(50, 40)))
+  expect_equal(is.na(g$values), is.na(small$values))
+  expect_equal(g$values, small$values, tolerance = 1e-10)
+})
