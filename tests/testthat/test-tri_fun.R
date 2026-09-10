@@ -148,3 +148,33 @@ test_that("normalising coordinates leaves barycentric weights alone", {
   at_moved <- cbind(at[, 1] * 1e5 + 3e6, at[, 2] * 1e5 - 7e6)
   expect_equal(bary_weights(tri, at), bary_weights(moved, at_moved))
 })
+
+test_that("mesh_raster handles a dense mesh whose projection overlaps itself", {
+  ## A closed 3D surface, so front and back triangles cover the same x-y: the
+  ## shape of Rvcg's humface, which the mesh_raster() example uses and which
+  ## cannot be built here. Any containing triangle is a valid answer; the point
+  ## is that the search completes and fills the grid.
+  nu <- 40; nv <- 30
+  gg <- expand.grid(u = seq(0, 2 * pi, length.out = nu),
+                    v = seq(0, pi, length.out = nv))
+  vb <- rbind(137.5 * sin(gg$v) * cos(gg$u),
+              137.5 * sin(gg$v) * sin(gg$u),
+              137.5 * cos(gg$v), 1)
+  idx <- matrix(seq_len(nu * nv), nu, nv)
+  corners <- expand.grid(i = seq_len(nu - 1L), j = seq_len(nv - 1L))
+  a <- idx[cbind(corners$i, corners$j)]
+  b <- idx[cbind(corners$i + 1L, corners$j)]
+  cc <- idx[cbind(corners$i + 1L, corners$j + 1L)]
+  d <- idx[cbind(corners$i, corners$j + 1L)]
+  it <- cbind(rbind(a, b, cc), rbind(a, cc, d))
+  mesh <- structure(list(vb = vb, it = it, primitivetypes = "triangle"),
+                    class = c("mesh3d", "shape3d"))
+
+  g <- mesh_raster(mesh, n = 64)
+  expect_true(is_grid(g))
+  expect_equal(g$dimension, c(64L, 64L))
+  expect_gt(sum(!is.na(g$values)), 2000)
+  ## every value came off the sphere, so it is a z that exists on it
+  ok <- !is.na(g$values)
+  expect_true(all(abs(g$values[ok]) <= 137.5 + 1e-8))
+})
