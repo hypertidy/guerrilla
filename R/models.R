@@ -170,15 +170,7 @@ grid_kriging <- function(x, value = NULL, grid = NULL, model = NULL,
                         range = max(vg$dist) / 3, nugget = 0)
   }
   fitted <- gstat::fit.variogram(vg, model)
-  if (any(fitted$range < 0) || any(fitted$psill < 0)) {
-    stop("the variogram fit returned a model that cannot be used: ",
-         "a negative range or sill.\n  Usually that means these values have no ",
-         "spatial structure at these distances,\n  so there is nothing for ",
-         "kriging to weight by. Look at\n",
-         "    gstat::variogram(value ~ 1, ~ x + y, data)\n",
-         "  and pass a starting 'model' from gstat::vgm() if you can see ",
-         "structure in it.", call. = FALSE)
-  }
+  check_variogram_fit(fitted)
   out <- gstat::krige(value ~ 1, locations = ~ x + y, data = d,
                       newdata = cell_frame(s$grid), model = fitted,
                       debug.level = 0, ...)
@@ -229,6 +221,27 @@ grid_gam <- function(x, value = NULL, grid = NULL, formula = value ~ s(x, y),
   pred <- stats::predict(fit, cell_frame(s$grid), se.fit = statistic == "se")
   s$grid$values <- as.vector(if (statistic == "se") pred$se.fit else pred)
   s$grid
+}
+
+## A fitted variogram with a negative range or sill is not a model, it is the
+## optimiser reporting that there was nothing to fit. gstat's own error for it
+## comes from four calls down and says "variogram range can never be negative",
+## which does not tell the caller what to do.
+##
+## Whether a given set of values trips this is up to gstat's optimiser, and that
+## varies with the platform's linear algebra, so this is a function on its own
+## rather than a shape any particular dataset is guaranteed to produce.
+check_variogram_fit <- function(fitted) {
+  if (any(fitted$range < 0) || any(fitted$psill < 0)) {
+    stop("the variogram fit returned a model that cannot be used: ",
+         "a negative range or sill.\n  Usually that means these values have no ",
+         "spatial structure at these distances,\n  so there is nothing for ",
+         "kriging to weight by. Look at\n",
+         "    gstat::variogram(value ~ 1, ~ x + y, data)\n",
+         "  and pass a starting 'model' from gstat::vgm() if you can see ",
+         "structure in it.", call. = FALSE)
+  }
+  invisible(fitted)
 }
 
 #' Kernel smoothing on a grid

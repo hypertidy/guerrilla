@@ -120,23 +120,31 @@ test_that("mesh_raster makes its own grid from a mesh3d", {
 })
 
 test_that("coordinates of any magnitude work", {
-  ## geometry::tsearch() builds a quadtree and fails on some coordinate ranges;
-  ## this is one, and the interpolation normalises first so it never arises
+  ## geometry::tsearch() builds a quadtree over the points and the insertion
+  ## fails on some coordinate ranges. Which ranges is up to that package and
+  ## the platform, so this does not assert that any particular one fails --
+  ## it asserts that scaling the coordinates does not change our answer, which
+  ## is what makes normalising before the search safe.
   d <- readxl::read_excel(system.file("extdata", "BW-Zooplankton_env.xls",
                                       package = "guerrilla", mustWork = TRUE))
   ll <- as.matrix(d[c("Lon", "Lat")])
-  big <- cbind((ll[, 1] - mean(ll[, 1])) * 1000, (ll[, 2] - mean(ll[, 2])) * 1000)
-  grid <- grid_spec(big, dimension = c(50, 40))
-  ## the raw call is what fails
-  expect_error(geometry::tsearch(big[, 1], big[, 2], geometry::delaunayn(big),
-                                 grid_xy(grid)[, 1], grid_xy(grid)[, 2],
-                                 bary = TRUE),
-               "QuadTree")
-  ## and this does not
-  g <- grid_barycentric(big, d$temp, grid)
-  expect_true(sum(!is.na(g$values)) > 1000)
-  ## same surface as the unscaled data, which is the reason normalising is safe
-  small <- grid_barycentric(ll, d$temp, grid_spec(ll, dimension = c(50, 40)))
-  expect_equal(is.na(g$values), is.na(small$values))
-  expect_equal(g$values, small$values, tolerance = 1e-10)
+  centred <- cbind(ll[, 1] - mean(ll[, 1]), ll[, 2] - mean(ll[, 2]))
+  small <- grid_barycentric(centred, d$temp,
+                            grid_spec(centred, dimension = c(50, 40)))
+  for (scale in c(1e3, 1e4, 1e6)) {
+    big <- centred * scale
+    g <- grid_barycentric(big, d$temp, grid_spec(big, dimension = c(50, 40)))
+    expect_true(sum(!is.na(g$values)) > 1000)
+    expect_equal(is.na(g$values), is.na(small$values))
+    expect_equal(g$values, small$values, tolerance = 1e-10)
+  }
+})
+
+test_that("normalising coordinates leaves barycentric weights alone", {
+  ## the invariance the normalisation rests on, on its own
+  tri <- cbind(c(0, 1, 0), c(0, 0, 1))
+  at <- rbind(c(0.25, 0.25), c(1/3, 1/3))
+  moved <- cbind(tri[, 1] * 1e5 + 3e6, tri[, 2] * 1e5 - 7e6)
+  at_moved <- cbind(at[, 1] * 1e5 + 3e6, at[, 2] * 1e5 - 7e6)
+  expect_equal(bary_weights(tri, at), bary_weights(moved, at_moved))
 })

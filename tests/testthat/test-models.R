@@ -44,14 +44,25 @@ test_that("a bigger idp moves idw towards nearest neighbour", {
   expect_lt(mean(abs(near - nn)), mean(abs(far - nn)))
 })
 
-test_that("kriging reports its own uncertainty, and refuses noise", {
+test_that("kriging reports its own uncertainty", {
   skip_if_not_installed("gstat")
   v <- suppressWarnings(grid_kriging(xy, val, g, statistic = "se"))
   expect_true(all(v$values >= 0))
-  set.seed(9)
-  p <- cbind(runif(120), runif(120))
-  expect_error(suppressWarnings(grid_kriging(p, rnorm(120))),
+})
+
+test_that("an unusable variogram fit is refused, with a reason", {
+  ## Not run through grid_kriging() on a dataset chosen to produce it: whether
+  ## a given set of values makes gstat's optimiser return a negative range
+  ## depends on the platform's linear algebra, and a test should not turn on
+  ## that. The guard is what this package owns, so test the guard.
+  expect_error(check_variogram_fit(data.frame(range = c(0, -0.05),
+                                              psill = c(0.8, 0.1))),
                "no spatial structure")
+  expect_error(check_variogram_fit(data.frame(range = c(0, 1),
+                                              psill = c(0.8, -0.1))),
+               "no spatial structure")
+  ok <- data.frame(range = c(0, 1), psill = c(0.8, 0.1))
+  expect_identical(check_variogram_fit(ok), ok)
 })
 
 test_that("gam takes a formula, and s(x) + s(y) is a different surface", {
