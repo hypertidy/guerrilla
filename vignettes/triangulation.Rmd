@@ -186,5 +186,26 @@ identical(mesh_raster(mesh, grid = g)$values, tri_grid$values)
 
 `mesh_raster()` runs the argument backwards from everything else here, which is
 why it is worth having. Given points it triangulates them; given a mesh it
-already has the triangles and only has to interpolate. Anything \pkg{Rvcg} or
-\pkg{anglr} can hand you as a `mesh3d` can go straight onto a grid.
+already has the triangles and only has to interpolate. Anything **Rvcg** can
+hand you as a `mesh3d` can go straight onto a grid.
+
+## And back the other way
+
+A grid is a mesh, so it can be drawn as one. **anglr** does that, on top of
+**rgl**:
+
+```r
+xyz <- quakes[c("long", "lat", "depth")]
+xyz$depth <- -xyz$depth
+g2 <- mesh_raster(xyz)
+rat <- 1 / cos(mean(xyz[["lat"]]) * pi / 180)
+
+anglr::plot3d(as_raster(g2))
+rgl::aspect3d(1, rat, 0.1)
+rgl::points3d(xyz$long, xyz$lat, xyz$depth + 30)
+```
+
+That code is shown rather than run, and neither package is a dependency of
+this one. **rgl** needs OpenGL, which recent macOS no longer provides, so
+having it anywhere in `Suggests` breaks installation on that platform for a
+picture this package does not otherwise need.

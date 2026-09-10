@@ -52,7 +52,7 @@ val <- bw$temp
 ```
 
 The values are sea surface temperatures, so the plots use a palette meant for
-them, from \pkg{palr}:
+them, from **palr**:
 
 ```{r}
 cols <- sst_pal(24)

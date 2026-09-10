@@ -1,3 +1,29 @@
+# guerrilla 0.4.0.9000
+
+## anglr and rgl leave Suggests
+
+`rgl` needs OpenGL, and macOS 26 (Tahoe) no longer provides it, so `rgl.so`
+cannot be loaded at all: `Library not loaded: /opt/X11/lib/libGLU.1.dylib`.
+`anglr` loads `rgl` while byte-compiling, so `anglr` cannot be installed there
+either, and because both were in `Suggests` that broke the macOS CI job before
+`R CMD check` ever started.
+
+Neither package was used by any code here. They appeared once, in a
+`mesh_raster()` example guarded by `interactive()`, which `R CMD check` never
+runs. So they are gone, and with `anglr` goes the `Remotes:` line and the last
+non-CRAN dependency.
+
+The picture they drew is worth keeping, so it moved to
+`vignette("triangulation")` as code that is shown rather than run.
+
+## Package names were disappearing from the vignettes
+
+`\pkg{}` is Rd markup. In an R Markdown vignette pandoc reads it as raw LaTeX
+and drops it, so "comes from \pkg{vaster}, which does grid index work" rendered
+as "comes from , which does grid index work". Ten of them across the four
+articles, now bold text instead. The roxygen blocks are unaffected, since those
+really do become Rd.
+
 # guerrilla 0.4.0
 
 ## Four articles instead of one long one

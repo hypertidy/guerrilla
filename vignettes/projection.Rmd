@@ -164,9 +164,9 @@ set one yourself, which is why the numbers above come back as `NA`.
 ## Where gdal_grid lives
 
 `gdal_grid` is reachable from R only through `sf::gdal_utils()`.
-\pkg{gdalraster} wraps `warp`, `translate` and `rasterize` but not `GDALGrid`,
+**gdalraster** wraps `warp`, `translate` and `rasterize` but not `GDALGrid`,
 and the unified `gdal` command line introduced in GDAL 3.11 has no grid
-subcommand for it to wrap. So `grid_gdal()` needs \pkg{sf}, and that is the
+subcommand for it to wrap. So `grid_gdal()` needs **sf**, and that is the
 only reason it does.
 
 # Thin plate splines, in the other direction
@@ -222,7 +222,7 @@ warp(withgcp, warped, t_srs = laea, cl_arg = c("-tps", "-r", "near"),
      quiet = TRUE)
 ```
 
-Now fit the same thing with \pkg{fields}, from the same sixteen points, and
+Now fit the same thing with **fields**, from the same sixteen points, and
 compare where GDAL and R each think a given map position came from.
 
 ```{r, eval = FALSE}

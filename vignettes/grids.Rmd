@@ -62,7 +62,7 @@ plot(g_filled <- local({ g$values <- seq_len(grid_ncell(g)); g }))
 
 The first cell is the top left one and holds 1.
 
-All of the arithmetic comes from \pkg{vaster}, which does grid index work in
+All of the arithmetic comes from **vaster**, which does grid index work in
 base R with no dependencies at all:
 
 ```{r}
@@ -138,6 +138,6 @@ head(as.data.frame(g), 3)
 # What is not here
 
 A grid has no time dimension, no bands, no attributes, no units and no
-resampling. Those are all real and useful things and they are what \pkg{terra},
-\pkg{stars} and \pkg{gdalraster} are for. This package stops at the point where
+resampling. Those are all real and useful things and they are what **terra**,
+**stars** and **gdalraster** are for. This package stops at the point where
 you would need one of them, and hands you the numbers.

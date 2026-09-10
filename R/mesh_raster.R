@@ -63,12 +63,8 @@ grid_for <- function(xy, n = 128) {
 #'   plot(grid, col = grey.colors(24))
 #' }
 #'
-#' ## and back the other way, in 3D
-#' if (interactive() && requireNamespace("anglr", quietly = TRUE)) {
-#'   anglr::plot3d(as_raster(g2))
-#'   rgl::aspect3d(1, rat, 0.1)
-#'   rgl::points3d(xyz$long, xyz$lat, xyz$depth + 30)
-#' }
+#' ## for the other direction, a grid drawn as a 3D mesh, see
+#' ## vignette("triangulation")
 mesh_raster <- function(x, grid = NULL, n = 128, ...) {
   UseMethod("mesh_raster")
 }

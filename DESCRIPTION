@@ -1,5 +1,5 @@
 Package: guerrilla
-Version: 0.4.0
+Version: 0.4.0.9000
 Title: Illustrate Various Methods of Interpolation for Irregular Data
 Authors@R: c(person("Michael", "Sumner", 
              email = "mdsumner@gmail.com", 
@@ -26,7 +26,6 @@ Imports:
     vaster,
     wk
 Suggests:
-    anglr,
     Rvcg,
     interp,
     raster,
@@ -44,9 +43,7 @@ Suggests:
     covr,
     testthat,
     mgcv,
-    maps,
-    rgl
+    maps
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
-Remotes: hypertidy/anglr
 Config/roxygen2/version: 8.1.0
